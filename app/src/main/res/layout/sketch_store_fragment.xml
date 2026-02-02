@@ -100,14 +100,5 @@
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior"
                 tools:listitem="@layout/sketch_store_project_item" />
-        </LinearLayout>
-
-        <!-- Search Bar -->
-
-        <!-- Featured Banner -->
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- Main Content List -->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
