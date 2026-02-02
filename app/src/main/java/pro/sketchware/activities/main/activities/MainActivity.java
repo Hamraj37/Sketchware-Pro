@@ -543,7 +543,7 @@ public class MainActivity extends BasePermissionAppCompatActivity {
 
         binding.createNewProject.hide();
         binding.uploadProject.show();
-        setAppBarVisibility(View.GONE);
+        setAppBarVisibility(View.VISIBLE);
         if (activeFragment != null) transaction.hide(activeFragment);
         if (fm.findFragmentByTag(SKETCH_STORE_FRAGMENT_TAG) == null) {
             shouldShow = false;

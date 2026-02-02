@@ -34,7 +34,7 @@
     <string name="block_bluetoothconnect_get_random_uuid_head" />
     <string name="block_bluetoothconnect_get_random_uuid_tail">get random uuid</string>
     <string name="block_bluetoothconnect_is_bluetooth_activated_head" />
-    <string name="block_bluetoothconnect_is_bluetooth_activated_tail">is bluetooth activated</string>
+    <string name="block_bluetoothconnect_is_bluetooth_activated_tail">isbluetooth activated</string>
     <string name="block_bluetoothconnect_is_bluetooth_enabled_head" />
     <string name="block_bluetoothconnect_is_bluetooth_enabled_tail">is bluetooth enabled</string>
     <string name="block_bluetoothconnect_ready_connection_body_1">ready connection with tag</string>
@@ -287,7 +287,7 @@
     <string name="block_get_location_x_head" />
     <string name="block_get_location_x_tail">getLocationX</string>
     <string name="block_get_location_y_head" />
-    <string name="block_get_location_y_tail">getLocationY</string>
+    <string name="block_get_location_y_tail">locationY</string>
     <string name="block_get_map_in_list_body_1">of</string>
     <string name="block_get_map_in_list_body_2">to</string>
     <string name="block_get_map_in_list_head">get at</string>
@@ -330,7 +330,6 @@
     <string name="block_insert_list_int_tail" />
     <string name="block_insert_list_map_body_1">value</string>
     <string name="block_insert_list_map_body_2">at</string>
-    <string name="block_insert_list_map_body_3">to</string>
     <string name="block_insert_list_map_head">insert key</string>
     <string name="block_insert_list_map_tail" />
     <string name="block_insert_list_str_body_1">at</string>
@@ -1744,7 +1743,6 @@ ACTION_VIEW
     <string name="publish_images_title_dialog_delete_screenshot">Delete Screenshot</string>
     <string name="publish_images_title_dialog_invalid_delete_screenshot">Delete Screenshot Error</string>
     <string name="publish_images_title_dialog_invalid_icon_size">Icon Size Error</string>
-    <string name="publish_images_title_dialog_invalid_screenshot_size">Screenshot Size Error</string>
     <string name="publish_images_title_icon">Icon</string>
     <string name="publish_images_title_screenshots">Screenshots</string>
     <string name="publish_mail_complete_desc">We sent your apk and a publishing guide to your email. Please follow the guide on the email and publish your first apk.</string>
@@ -2093,7 +2091,7 @@ Please try again later"</string>
     <string name="shared_view_message_downloading_view_data">Downloading View Data</string>
     <string name="shared_view_preview_message_download_complete">Download Completed. Please check this view</string>
     <string name="shared_view_preview_title">View Preview</string>
-    <string name="shared_views_detail_message_add_collection_complete">Add Collection Complete. If the view has the required images, the required images are added to image collection automatically and you can use the view with the required images in your project directly.</string>
+    <string name="shared_views_detail_message_add_collections_complete">Add Collection Complete. If the view has the required images, the required images are added to image collection automatically and you can use the view with required images in your project directly.</string>
     <string name="shared_views_detail_message_already_liked_view">Already Liked View</string>
     <string name="shared_views_detail_message_dialog_delete_my_shared_view">Do you want to delete this view?</string>
     <string name="shared_views_detail_see_more_views">See more shared views of %s</string>
@@ -2293,5 +2291,5 @@ Please try again later"</string>
     <string name="attr_already_exist">This attribute already exists</string>
     <string name="link_sw_assist">https://play.google.com/store/apps/details?id=com.w3wide.swassist</string>
 
-
+    <string name="common_word_search">Search</string>
 </resources>

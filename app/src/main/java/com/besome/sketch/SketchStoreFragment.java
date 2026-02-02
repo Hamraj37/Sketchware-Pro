@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.card.MaterialCardView; // Corrected import for MaterialCardView
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -57,9 +58,6 @@ public class SketchStoreFragment extends Fragment {
         View view = inflater.inflate(R.layout.sketch_store_fragment, container, false);
         recyclerView = view.findViewById(R.id.recycler_view);
         bannerRecyclerView = view.findViewById(R.id.banner_recycler_view);
-        searchBarCard = view.findViewById(R.id.search_bar_card); // Initialized searchBarCard
-        searchEditText = view.findViewById(R.id.search_edit_text); // Initialized searchEditText
-        profileImage = view.findViewById(R.id.profile_image);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         projectList = new ArrayList<>();
@@ -72,30 +70,45 @@ public class SketchStoreFragment extends Fragment {
         bannerRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         bannerRecyclerView.setAdapter(bannerAdapter);
 
-        // Set TextWatcher for the search bar
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Not needed for this implementation
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterProjects(s.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                // Not needed for this implementation
-            }
-        });
 
         // Initialize Firebase
         databaseReference = FirebaseDatabase.getInstance().getReference("projects");
         fetchProjects();
-        updateProfileImage();
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setAppBarScrolling(false);
+    }
+
+    @Override
+    public void onDestroyView() {
+        setAppBarScrolling(true);
+        super.onDestroyView();
+    }
+
+    private void setAppBarScrolling(boolean enabled) {
+        if (getActivity() != null) {
+            AppBarLayout appBarLayout = getActivity().findViewById(R.id.appbar);
+            if (appBarLayout != null) {
+                if (!enabled) {
+                    appBarLayout.setExpanded(true, false);
+                }
+                for (int i = 0; i < appBarLayout.getChildCount(); i++) {
+                    View child = appBarLayout.getChildAt(i);
+                    AppBarLayout.LayoutParams params = (AppBarLayout.LayoutParams) child.getLayoutParams();
+                    if (enabled) {
+                        params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS | AppBarLayout.LayoutParams.SCROLL_FLAG_SNAP);
+                    } else {
+                        params.setScrollFlags(0);
+                    }
+                    child.setLayoutParams(params);
+                }
+            }
+        }
     }
 
     private void fetchProjects() {
@@ -151,24 +164,6 @@ public class SketchStoreFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (getActivity() instanceof MainActivity) {
-            if (hidden) {
-                ((MainActivity) getActivity()).setAppBarVisibility(View.VISIBLE);
-            } else {
-                ((MainActivity) getActivity()).setAppBarVisibility(View.GONE);
-            }
-        }
-    }
-
-    private void updateProfileImage() {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser != null) {
-            Glide.with(requireContext()).load(currentUser.getPhotoUrl()).into(profileImage);
-        }
-    }
 
     private static class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectViewHolder> {
 
