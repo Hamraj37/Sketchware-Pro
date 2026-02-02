@@ -1,6 +1,8 @@
 package com.besome.sketch.editor.component;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +21,7 @@ import com.google.android.flexbox.JustifyContent;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import mod.hey.studios.util.Helper;
 import mod.hilal.saif.components.ComponentsHandler;
@@ -32,6 +35,7 @@ public class AddComponentBottomSheet extends BottomSheetDialogFragment {
     private ProjectFileBean projectFileBean;
 
     private ArrayList<ComponentBean> componentList;
+    private ArrayList<ComponentBean> originalComponentList;
     private LogicAddComponentBinding binding;
     private OnComponentCreateListener onComponentCreateListener;
 
@@ -57,43 +61,44 @@ public class AddComponentBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void initializeComponentBeans() {
-        componentList = new ArrayList<>();
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_INTENT));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_SHAREDPREF));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FILE_PICKER));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_CALENDAR));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_VIBRATOR));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_TIMERTASK));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_DIALOG));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_MEDIAPLAYER));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_SOUNDPOOL));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_OBJECTANIMATOR));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_CAMERA));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_GYROSCOPE));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_TEXT_TO_SPEECH));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_SPEECH_TO_TEXT));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_REQUEST_NETWORK));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_BLUETOOTH_CONNECT));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_LOCATION_MANAGER));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_PROGRESS_DIALOG));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_DATE_PICKER_DIALOG));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_TIME_PICKER_DIALOG));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_NOTIFICATION));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FRAGMENT_ADAPTER));
+        originalComponentList = new ArrayList<>();
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_INTENT));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_SHAREDPREF));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FILE_PICKER));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_CALENDAR));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_VIBRATOR));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_TIMERTASK));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_DIALOG));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_MEDIAPLAYER));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_SOUNDPOOL));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_OBJECTANIMATOR));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_CAMERA));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_GYROSCOPE));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_TEXT_TO_SPEECH));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_SPEECH_TO_TEXT));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_REQUEST_NETWORK));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_BLUETOOTH_CONNECT));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_LOCATION_MANAGER));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_PROGRESS_DIALOG));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_DATE_PICKER_DIALOG));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_TIME_PICKER_DIALOG));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_NOTIFICATION));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FRAGMENT_ADAPTER));
 
         // Ads
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_INTERSTITIAL_AD));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_REWARDED_VIDEO_AD));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_INTERSTITIAL_AD));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_REWARDED_VIDEO_AD));
 
         // Firebase
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_AUTH));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_STORAGE));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_AUTH_PHONE));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_CLOUD_MESSAGE));
-        componentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_AUTH_GOOGLE_LOGIN));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_AUTH));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_STORAGE));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_AUTH_PHONE));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_CLOUD_MESSAGE));
+        originalComponentList.add(new ComponentBean(ComponentBean.COMPONENT_TYPE_FIREBASE_AUTH_GOOGLE_LOGIN));
 
-        ComponentsHandler.add(componentList);
+        ComponentsHandler.add(originalComponentList);
+        componentList = new ArrayList<>(originalComponentList);
     }
 
     @Nullable
@@ -116,6 +121,21 @@ public class AddComponentBottomSheet extends BottomSheetDialogFragment {
         binding.componentList.setAdapter(new ComponentsAdapter());
         binding.componentList.setLayoutManager(flexboxLayoutManager);
 
+        binding.etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                filter(s.toString());
+            }
+        });
+
         binding.componentList.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -128,6 +148,22 @@ public class AddComponentBottomSheet extends BottomSheetDialogFragment {
                 binding.dividerBottom.setVisibility(last < total - 1 ? View.VISIBLE : View.GONE);
             }
         });
+    }
+
+    private void filter(String text) {
+        componentList.clear();
+        if (text.isEmpty()) {
+            componentList.addAll(originalComponentList);
+        } else {
+            text = text.toLowerCase(Locale.getDefault());
+            for (ComponentBean item : originalComponentList) {
+                String componentName = ComponentBean.getComponentName(getContext(), item.type);
+                if (componentName.toLowerCase(Locale.getDefault()).contains(text)) {
+                    componentList.add(item);
+                }
+            }
+        }
+        binding.componentList.getAdapter().notifyDataSetChanged();
     }
 
     @Override

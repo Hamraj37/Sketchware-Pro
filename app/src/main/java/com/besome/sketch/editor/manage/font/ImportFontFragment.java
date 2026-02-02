@@ -11,8 +11,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,6 +23,7 @@ import com.besome.sketch.beans.ProjectResourceBean;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import a.a.a.jC;
@@ -43,6 +47,12 @@ public class ImportFontFragment extends qA {
     private FrManageFontListBinding binding;
     private fontAdapter adapter;
     private ManageFontBinding actBinding;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
 
     public String getResourceFilePath(ProjectResourceBean resourceBean) {
         String resFullName = resourceBean.resFullName;
@@ -119,15 +129,32 @@ public class ImportFontFragment extends qA {
     public final ArrayList<String> getResourceNames() {
         return projectResourceBeans.stream()
                 .map(bean -> bean.resName)
-                .collect(Collectors.toCollection(() -> {
-                    ArrayList<String> list = new ArrayList<>();
-                    list.add("app_icon");
-                    return list;
-                }));
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public void notifyDataSetChanged() {
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+            toggleEmptyStateVisibility();
+        }
     }
 
     public ArrayList<ProjectResourceBean> getProjectResourceBeans() {
         return projectResourceBeans;
+    }
+
+    public void refresh() {
+        if (projectResourceBeans != null && adapter != null) {
+            projectResourceBeans.clear();
+            if (jC.d(sc_id) != null) {
+                ArrayList<ProjectResourceBean> resourceBeans = jC.d(sc_id).d;
+                if (resourceBeans != null) {
+                    projectResourceBeans.addAll(resourceBeans);
+                }
+            }
+            adapter.notifyDataSetChanged();
+            toggleEmptyStateVisibility();
+        }
     }
 
     public void processResources() {
@@ -166,7 +193,7 @@ public class ImportFontFragment extends qA {
     }
 
     public final void toggleEmptyStateVisibility() {
-        if (projectResourceBeans.isEmpty()) {
+        if (adapter.originalBeans.isEmpty()) {
             binding.tvGuide.setVisibility(View.VISIBLE);
             binding.fontList.setVisibility(View.GONE);
         } else {
@@ -202,7 +229,8 @@ public class ImportFontFragment extends qA {
             projectResourceBeans = bundle.getParcelableArrayList("fonts");
         }
 
-        adapter.notifyDataSetChanged();
+        adapter = new fontAdapter(projectResourceBeans);
+        binding.fontList.setAdapter(adapter);
         toggleEmptyStateVisibility();
     }
 
@@ -235,17 +263,39 @@ public class ImportFontFragment extends qA {
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
-        super.onCreateOptionsMenu(menu, menuInflater);
+        menu.clear();
         menuInflater.inflate(R.menu.manage_font_menu, menu);
+        super.onCreateOptionsMenu(menu, menuInflater);
+
+        menu.findItem(R.id.menu_search).setVisible(true);
         menu.findItem(R.id.menu_font_delete).setVisible(!isSelecting);
+        menu.findItem(R.id.menu_font_edit).setVisible(false);
+        menu.findItem(R.id.menu_font_add).setVisible(false);
+
+        MenuItem searchItem = menu.findItem(R.id.menu_search);
+        if (searchItem != null) {
+            SearchView searchView = (SearchView) searchItem.getActionView();
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (adapter != null) {
+                        adapter.getFilter().filter(newText);
+                    }
+                    return true;
+                }
+            });
+        }
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater layoutInflater, ViewGroup root, Bundle bundle) {
 
         binding = FrManageFontListBinding.inflate(layoutInflater, root, false);
-
-        setHasOptionsMenu(true);
 
         actBinding = ((ManageFontActivity) requireActivity()).binding;
         actBinding.btnCancel.setOnClickListener(view -> setSelectingMode(false));
@@ -266,8 +316,6 @@ public class ImportFontFragment extends qA {
         });
 
         binding.fontList.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new fontAdapter();
-        binding.fontList.setAdapter(adapter);
 
         binding.fontList.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -312,21 +360,25 @@ public class ImportFontFragment extends qA {
         super.onSaveInstanceState(bundle);
     }
 
-    public class fontAdapter extends RecyclerView.Adapter<fontAdapter.ViewHolder> {
+    public class fontAdapter extends RecyclerView.Adapter<fontAdapter.ViewHolder> implements Filterable {
         public int selectedPosition;
+        private List<ProjectResourceBean> filteredBeans;
+        private List<ProjectResourceBean> originalBeans;
 
-        public fontAdapter() {
+        public fontAdapter(List<ProjectResourceBean> beans) {
+            this.originalBeans = beans;
+            this.filteredBeans = new ArrayList<>(beans);
             selectedPosition = -1;
         }
 
         @Override
         public int getItemCount() {
-            return projectResourceBeans.size();
+            return filteredBeans.size();
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            ProjectResourceBean resource = projectResourceBeans.get(position);
+            ProjectResourceBean resource = filteredBeans.get(position);
 
             if (isSelecting) {
                 holder.binding.imgFont.setVisibility(View.GONE);
@@ -366,6 +418,37 @@ public class ImportFontFragment extends qA {
             return new ViewHolder(binding);
         }
 
+        @Override
+        public Filter getFilter() {
+            return new Filter() {
+                @Override
+                protected FilterResults performFiltering(CharSequence constraint) {
+                    String charString = constraint.toString();
+                    if (charString.isEmpty()) {
+                        filteredBeans = new ArrayList<>(originalBeans);
+                    } else {
+                        List<ProjectResourceBean> filteredList = new ArrayList<>();
+                        for (ProjectResourceBean row : originalBeans) {
+                            if (row.resName.toLowerCase().contains(charString.toLowerCase())) {
+                                filteredList.add(row);
+                            }
+                        }
+                        filteredBeans = filteredList;
+                    }
+
+                    FilterResults filterResults = new FilterResults();
+                    filterResults.values = filteredBeans;
+                    return filterResults;
+                }
+
+                @Override
+                protected void publishResults(CharSequence constraint, FilterResults results) {
+                    filteredBeans = (ArrayList<ProjectResourceBean>) results.values;
+                    notifyDataSetChanged();
+                }
+            };
+        }
+
         public class ViewHolder extends RecyclerView.ViewHolder {
             public ManageFontListItemBinding binding;
 
@@ -382,10 +465,10 @@ public class ImportFontFragment extends qA {
                     if (isSelecting) {
                         boolean newState = !binding.chkSelect.isChecked();
                         binding.chkSelect.setChecked(newState);
-                        projectResourceBeans.get(selectedPosition).isSelected = newState;
+                        filteredBeans.get(selectedPosition).isSelected = newState;
                         notifyItemChanged(selectedPosition);
                     } else {
-                        importFont(projectResourceBeans.get(getLayoutPosition()).resFullName, getResourceFilePath(projectResourceBeans.get(getLayoutPosition())));
+                        importFont(filteredBeans.get(getLayoutPosition()).resFullName, getResourceFilePath(filteredBeans.get(getLayoutPosition())));
                     }
                 });
 
@@ -395,7 +478,7 @@ public class ImportFontFragment extends qA {
 
                     boolean newState = !binding.chkSelect.isChecked();
                     binding.chkSelect.setChecked(newState);
-                    projectResourceBeans.get(selectedPosition).isSelected = newState;
+                    filteredBeans.get(selectedPosition).isSelected = newState;
 
                     return false;
                 });

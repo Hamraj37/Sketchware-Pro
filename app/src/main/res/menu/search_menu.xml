@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
@@ -6,14 +7,4 @@
         android:title="@string/common_word_search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />
-    <item
-        android:id="@+id/action_import_events"
-        android:title="Import events"
-        android:orderInCategory="100"
-        android:showAsAction="never" />
-    <item
-        android:id="@+id/action_export_events"
-        android:title="Export events"
-        android:orderInCategory="101"
-        android:showAsAction="never" />
 </menu>

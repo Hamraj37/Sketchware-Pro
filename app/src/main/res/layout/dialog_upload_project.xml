@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Upload Project"
+                android:textAppearance="?attr/textAppearanceHeadline6" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    app:cardCornerRadius="20dp">
+
+                    <ImageView
+                        android:id="@+id/project_logo"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:scaleType="centerCrop"
+                        app:srcCompat="@drawable/splash_logo" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/project_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Project Name" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/project_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Project Description" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="100dp"
+                        android:layout_height="178dp"
+                        android:layout_marginEnd="8dp"
+                        app:cardCornerRadius="20dp">
+
+                        <ImageView
+                            android:id="@+id/screenshot1"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:scaleType="centerCrop"
+                            app:srcCompat="@drawable/splash_logo" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="100dp"
+                        android:layout_height="178dp"
+                        android:layout_marginEnd="8dp"
+                        app:cardCornerRadius="20dp">
+
+                        <ImageView
+                            android:id="@+id/screenshot2"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:scaleType="centerCrop"
+                            app:srcCompat="@drawable/splash_logo" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="100dp"
+                        android:layout_height="178dp"
+                        app:cardCornerRadius="20dp">
+
+                        <ImageView
+                            android:id="@+id/screenshot3"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:scaleType="centerCrop"
+                            app:srcCompat="@drawable/splash_logo" />
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <Button
+                android:id="@+id/pick_swb_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:text="Select .swb File" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

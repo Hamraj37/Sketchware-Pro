@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:colorBackground">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:colorBackground"
+        app:elevation="0dp"
+        app:liftOnScroll="true">
+
+        <View
+            android:id="@+id/status_bar_overlapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <!-- Search Bar -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/search_bar_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:layout_scrollFlags="scroll|enterAlways|snap"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_mtrl_search"
+                    app:tint="?attr/colorOnSurfaceVariant" />
+
+                <EditText
+                    android:id="@+id/search_edit_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:background="@android:color/transparent"
+                    android:hint="Search for projects..."
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch" />
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/profile_image"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="16dp"
+                    android:src="@drawable/default_profile_image"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Featured Banner -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/banner_card"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:layout_scrollFlags="scroll">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/banner_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingHorizontal="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:listitem="@layout/sketch_store_project_item" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
