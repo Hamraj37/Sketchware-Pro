@@ -11,9 +11,13 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -27,16 +31,28 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.besome.sketch.SketchStoreFragment;
 import com.besome.sketch.lib.base.BasePermissionAppCompatActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 import a.a.a.DB;
 import a.a.a.GB;
@@ -45,10 +61,18 @@ import mod.hey.studios.project.backup.BackupRestoreManager;
 import mod.hey.studios.util.Helper;
 import mod.hilal.saif.activities.tools.ConfigActivity;
 import mod.tyron.backup.SingleCopyTask;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.json.JSONObject;
+import pro.sketchware.BuildConfig;
 import pro.sketchware.R;
 import pro.sketchware.activities.about.AboutActivity;
+import pro.sketchware.activities.main.fragments.profile.ProfileFragment;
 import pro.sketchware.activities.main.fragments.projects.ProjectsFragment;
-import pro.sketchware.activities.main.fragments.projects_store.ProjectsStoreFragment;
+import pro.sketchware.data.model.Project;
 import pro.sketchware.databinding.MainBinding;
 import pro.sketchware.lib.base.BottomSheetDialogView;
 import pro.sketchware.utility.DataResetter;
@@ -58,11 +82,19 @@ import pro.sketchware.utility.UI;
 
 public class MainActivity extends BasePermissionAppCompatActivity {
     private static final String PROJECTS_FRAGMENT_TAG = "projects_fragment";
-    private static final String PROJECTS_STORE_FRAGMENT_TAG = "projects_store_fragment";
+    private static final String SKETCH_STORE_FRAGMENT_TAG = "sketch_store_fragment";
+    private static final String PROFILE_FRAGMENT_TAG = "profile_fragment";
+    private static final int REQUEST_CODE_PICK_IMAGE = 101;
+    private static final int REQUEST_CODE_PICK_SWB = 102;
+
     private ActionBarDrawerToggle drawerToggle;
     private DB u;
     private Snackbar storageAccessDenied;
     private MainBinding binding;
+    private ImageView selectedImageView;
+    private Uri logoUri, swbFileUri;
+    private List<Uri> screenshotUris = new ArrayList<>();
+
     private final OnBackPressedCallback closeDrawer = new OnBackPressedCallback(true) {
         @Override
         public void handleOnBackPressed() {
@@ -71,7 +103,8 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         }
     };
     private ProjectsFragment projectsFragment;
-    private ProjectsStoreFragment projectsStoreFragment;
+    private SketchStoreFragment sketchStoreFragment;
+    private ProfileFragment profileFragment;
     private Fragment activeFragment;
     @IdRes
     private int currentNavItemId = R.id.item_projects;
@@ -122,6 +155,29 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
+                case REQUEST_CODE_PICK_IMAGE:
+                    if (data != null && data.getData() != null) {
+                        if (selectedImageView != null) {
+                            selectedImageView.setImageURI(data.getData());
+                            if (selectedImageView.getId() == R.id.project_logo) {
+                                logoUri = data.getData();
+                            } else {
+                                screenshotUris.add(data.getData());
+                            }
+                        }
+                    }
+                    break;
+                case REQUEST_CODE_PICK_SWB:
+                    if (data != null && data.getData() != null) {
+                        String path = data.getData().getPath();
+                        if (path != null && path.endsWith(".swb")) {
+                            swbFileUri = data.getData();
+                            Toast.makeText(this, "Selected file: " + path, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "Invalid file type. Please select a .swb file.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    break;
                 case 105:
                     DataResetter.a(this, data.getBooleanExtra("onlyConfig", true));
                     break;
@@ -276,19 +332,62 @@ public class MainActivity extends BasePermissionAppCompatActivity {
             } else if (id == R.id.item_sketchub) {
                 navigateToSketchubFragment();
                 return true;
+            } else if (id == R.id.item_profile) {
+                navigateToProfileFragment();
+                return true;
             }
             return false;
         });
 
+        binding.uploadProject.setOnClickListener(v -> {
+            screenshotUris.clear();
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_upload_project, null);
+            ImageView logo = dialogView.findViewById(R.id.project_logo);
+            ImageView screenshot1 = dialogView.findViewById(R.id.screenshot1);
+            ImageView screenshot2 = dialogView.findViewById(R.id.screenshot2);
+            ImageView screenshot3 = dialogView.findViewById(R.id.screenshot3);
+            Button pickSwbButton = dialogView.findViewById(R.id.pick_swb_button);
+            EditText projectName = dialogView.findViewById(R.id.project_name);
+            EditText projectDescription = dialogView.findViewById(R.id.project_description);
+
+            View.OnClickListener imageClickListener = v1 -> {
+                selectedImageView = (ImageView) v1;
+                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE);
+            };
+
+            logo.setOnClickListener(imageClickListener);
+            screenshot1.setOnClickListener(imageClickListener);
+            screenshot2.setOnClickListener(imageClickListener);
+            screenshot3.setOnClickListener(imageClickListener);
+
+            pickSwbButton.setOnClickListener(v1 -> {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("application/octet-stream");
+                startActivityForResult(intent, REQUEST_CODE_PICK_SWB);
+            });
+
+            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
+            builder.setView(dialogView);
+            builder.setPositiveButton("Upload", (dialog, which) -> {
+                uploadToGitHub(projectName.getText().toString(), projectDescription.getText().toString());
+            });
+            builder.setNegativeButton("Cancel", null);
+            builder.show();
+        });
+
         if (savedInstanceState != null) {
             projectsFragment = (ProjectsFragment) getSupportFragmentManager().findFragmentByTag(PROJECTS_FRAGMENT_TAG);
-            projectsStoreFragment = (ProjectsStoreFragment) getSupportFragmentManager().findFragmentByTag(PROJECTS_STORE_FRAGMENT_TAG);
+            sketchStoreFragment = (SketchStoreFragment) getSupportFragmentManager().findFragmentByTag(SKETCH_STORE_FRAGMENT_TAG);
+            profileFragment = (ProfileFragment) getSupportFragmentManager().findFragmentByTag(PROFILE_FRAGMENT_TAG);
             currentNavItemId = savedInstanceState.getInt("selected_tab_id");
             Fragment current = getFragmentForNavId(currentNavItemId);
             if (current instanceof ProjectsFragment) {
                 navigateToProjectsFragment();
-            } else if (current instanceof ProjectsStoreFragment) {
+            } else if (current instanceof SketchStoreFragment) {
                 navigateToSketchubFragment();
+            } else if (current instanceof ProfileFragment) {
+                navigateToProfileFragment();
             }
 
             return;
@@ -297,11 +396,108 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         navigateToProjectsFragment();
     }
 
+    private byte[] getBytesFromUri(Uri uri) throws IOException {
+        InputStream iStream = getContentResolver().openInputStream(uri);
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+
+        int len;
+        while ((len = iStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
+    }
+
+    private String uploadFileToGitHub(String token, String owner, String repo, String path, Uri fileUri, String commitMessage) throws Exception {
+        OkHttpClient client = new OkHttpClient();
+
+        byte[] fileBytes = getBytesFromUri(fileUri);
+        String encodedContent = Base64.encodeToString(fileBytes, Base64.NO_WRAP);
+
+        JSONObject json = new JSONObject();
+        json.put("message", commitMessage);
+        json.put("content", encodedContent);
+
+        RequestBody body = RequestBody.create(json.toString(), MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url("https://api.github.com/repos/" + owner + "/" + repo + "/contents/" + path)
+                .header("Authorization", "token " + token)
+                .put(body)
+                .build();
+
+        Response response = client.newCall(request).execute();
+        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+        JSONObject responseJson = new JSONObject(response.body().string());
+        return responseJson.getJSONObject("content").getString("download_url");
+    }
+
+    private void uploadToGitHub(String projectName, String projectDescription) {
+        String token = BuildConfig.GITHUB_API_KEY;
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, "GitHub API key not found.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            Toast.makeText(this, "You must be logged in to upload a project.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                String owner = "Hamraj37";
+                String repo = "Sketch-Store";
+
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("projects");
+                String projectId = databaseReference.push().getKey();
+                String projectPath = "projects/" + projectId;
+                List<String> screenshotUrls = new ArrayList<>();
+                String logoDownloadUrl = "";
+                String swbDownloadUrl = "";
+
+                if (swbFileUri != null) {
+                    String swbPath = projectPath + "/" + projectName + ".swb";
+                    swbDownloadUrl = uploadFileToGitHub(token, owner, repo, swbPath, swbFileUri, "Add .swb for " + projectName);
+                }
+
+                if (logoUri != null) {
+                    String logoPath = projectPath + "/logo.png";
+                    logoDownloadUrl = uploadFileToGitHub(token, owner, repo, logoPath, logoUri, "Add logo for " + projectName);
+                }
+
+                int i = 1;
+                for (Uri screenshotUri : screenshotUris) {
+                    String screenshotPath = projectPath + "/screenshot" + i++ + ".png";
+                    screenshotUrls.add(uploadFileToGitHub(token, owner, repo, screenshotPath, screenshotUri, "Add screenshot for " + projectName));
+                }
+
+                Project project = new Project(projectName, projectDescription, swbDownloadUrl, logoDownloadUrl, screenshotUrls, user.getPhotoUrl().toString(), user.getDisplayName());
+                project.setProjectId(projectId);
+                databaseReference.child(projectId).setValue(project);
+
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Project uploaded successfully.", Toast.LENGTH_SHORT).show();
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Failed to upload project.", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+
     private Fragment getFragmentForNavId(int navItemId) {
         if (navItemId == R.id.item_projects) {
             return projectsFragment;
         } else if (navItemId == R.id.item_sketchub) {
-            return projectsStoreFragment;
+            return sketchStoreFragment;
+        } else if (navItemId == R.id.item_profile) {
+            return profileFragment;
         }
         throw new IllegalArgumentException();
     }
@@ -322,6 +518,8 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         FragmentTransaction transaction = fm.beginTransaction();
 
         binding.createNewProject.show();
+        binding.uploadProject.hide();
+        setAppBarVisibility(View.VISIBLE);
         if (activeFragment != null) transaction.hide(activeFragment);
         if (fm.findFragmentByTag(PROJECTS_FRAGMENT_TAG) == null) {
             shouldShow = false;
@@ -335,8 +533,8 @@ public class MainActivity extends BasePermissionAppCompatActivity {
     }
 
     private void navigateToSketchubFragment() {
-        if (projectsStoreFragment == null) {
-            projectsStoreFragment = new ProjectsStoreFragment();
+        if (sketchStoreFragment == null) {
+            sketchStoreFragment = new SketchStoreFragment();
         }
 
         boolean shouldShow = true;
@@ -344,16 +542,42 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         FragmentTransaction transaction = fm.beginTransaction();
 
         binding.createNewProject.hide();
+        binding.uploadProject.show();
+        setAppBarVisibility(View.GONE);
         if (activeFragment != null) transaction.hide(activeFragment);
-        if (fm.findFragmentByTag(PROJECTS_STORE_FRAGMENT_TAG) == null) {
+        if (fm.findFragmentByTag(SKETCH_STORE_FRAGMENT_TAG) == null) {
             shouldShow = false;
-            transaction.add(binding.container.getId(), projectsStoreFragment, PROJECTS_STORE_FRAGMENT_TAG);
+            transaction.add(binding.container.getId(), sketchStoreFragment, SKETCH_STORE_FRAGMENT_TAG);
         }
-        if (shouldShow) transaction.show(projectsStoreFragment);
+        if (shouldShow) transaction.show(sketchStoreFragment);
         transaction.commit();
 
-        activeFragment = projectsStoreFragment;
+        activeFragment = sketchStoreFragment;
         currentNavItemId = R.id.item_sketchub;
+    }
+
+    private void navigateToProfileFragment() {
+        if (profileFragment == null) {
+            profileFragment = new ProfileFragment();
+        }
+
+        boolean shouldShow = true;
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction transaction = fm.beginTransaction();
+
+        binding.createNewProject.hide();
+        binding.uploadProject.hide();
+        setAppBarVisibility(View.VISIBLE);
+        if (activeFragment != null) transaction.hide(activeFragment);
+        if (fm.findFragmentByTag(PROFILE_FRAGMENT_TAG) == null) {
+            shouldShow = false;
+            transaction.add(binding.container.getId(), profileFragment, PROFILE_FRAGMENT_TAG);
+        }
+        if (shouldShow) transaction.show(profileFragment);
+        transaction.commit();
+
+        activeFragment = profileFragment;
+        currentNavItemId = R.id.item_profile;
     }
 
     @NonNull
@@ -431,7 +655,7 @@ public class MainActivity extends BasePermissionAppCompatActivity {
                         if (!optOutFile.createNewFile())
                             throw new IOException("Failed to create file " + optOutFile);
                     } catch (IOException e) {
-                        Log.e("MainActivity", "Error while trying to create " + "\"Don't show Android 11 hint\" dialog file: " + e.getMessage(), e);
+                        Log.e("MainActivity", "Error while trying to create 'Don\'t show Android 11 hint' dialog file: " + e.getMessage(), e);
                     }
                     v.dismiss();
                 });
@@ -473,4 +697,7 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         }
     }
 
+    public void setAppBarVisibility(int visibility) {
+        binding.appbar.setVisibility(visibility);
+    }
 }

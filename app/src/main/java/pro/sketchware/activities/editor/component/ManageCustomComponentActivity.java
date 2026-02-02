@@ -19,6 +19,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,8 +56,10 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
     private static final String COMPONENT_EXPORT_DIR = wq.getExtraDataExport() + "/components/";
     private static final String COMPONENT_DIR = wq.getCustomComponent();
     private List<HashMap<String, Object>> componentsList = new ArrayList<>();
+    private List<HashMap<String, Object>> originalComponentsList = new ArrayList<>();
     private TextView tv_guide;
     private RecyclerView componentView;
+    private String currentSearchQuery = "";
 
     @Override
     public void onCreate(Bundle _savedInstanceState) {
@@ -130,8 +134,58 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.search_menu, menu);
         menu.add(0, 0, 0, "Import");
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        if (searchItem != null) {
+            SearchView searchView = (SearchView) searchItem.getActionView();
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    currentSearchQuery = newText;
+                    filter(newText);
+                    return true;
+                }
+            });
+        }
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void sortComponents(List<HashMap<String, Object>> list) {
+        Collections.sort(list, (o1, o2) -> {
+            String name1 = (String) o1.get("name");
+            String name2 = (String) o2.get("name");
+            if (name1 == null) name1 = "";
+            if (name2 == null) name2 = "";
+            return name1.compareToIgnoreCase(name2);
+        });
+    }
+
+    private void filter(String text) {
+        componentsList.clear();
+        if (text.isEmpty()) {
+            componentsList.addAll(originalComponentsList);
+        } else {
+            String lowerText = text.toLowerCase(Locale.getDefault());
+            for (HashMap<String, Object> item : originalComponentsList) {
+                String name = (String) item.get("name");
+                String description = (String) item.get("description");
+                if ((name != null && name.toLowerCase(Locale.getDefault()).contains(lowerText)) ||
+                        (description != null && description.toLowerCase(Locale.getDefault()).contains(lowerText))) {
+                    componentsList.add(item);
+                }
+            }
+        }
+        sortComponents(componentsList);
+        if (componentView.getAdapter() != null) {
+            componentView.getAdapter().notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -159,8 +213,13 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
     }
 
     private void readComponents(String _path) {
-        componentsList = getGson().fromJson(FileUtil.readFile(_path), Helper.TYPE_MAP_LIST);
-        if (componentsList != null && !componentsList.isEmpty()) {
+        originalComponentsList = getGson().fromJson(FileUtil.readFile(_path), Helper.TYPE_MAP_LIST);
+        if (originalComponentsList != null && !originalComponentsList.isEmpty()) {
+            sortComponents(originalComponentsList);
+            componentsList = new ArrayList<>(originalComponentsList);
+            if (!currentSearchQuery.isEmpty()) {
+                filter(currentSearchQuery);
+            }
             ComponentsAdapter adapter = new ComponentsAdapter(componentsList);
             Parcelable state = componentView.getLayoutManager().onSaveInstanceState();
             componentView.setAdapter(adapter);
@@ -226,12 +285,13 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
                 for (int position : selectedPositions) {
                     var component = components.get(position);
                     if (position != -1 && ComponentsHandler.isValidComponent(component)) {
-                        componentsList.add(component);
+                        originalComponentsList.add(component);
                     } else {
                         SketchwareUtil.toastError(Helper.getResString(R.string.invalid_component));
                     }
                 }
-                FileUtil.writeFile(COMPONENT_DIR, getGson().toJson(componentsList));
+                sortComponents(originalComponentsList);
+                FileUtil.writeFile(COMPONENT_DIR, getGson().toJson(originalComponentsList));
                 readSettings();
                 v.dismiss();
             });
@@ -240,8 +300,9 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
         } else {
             var component = components.get(0);
             if (ComponentsHandler.isValidComponent(component)) {
-                componentsList.add(component);
-                FileUtil.writeFile(COMPONENT_DIR, getGson().toJson(componentsList));
+                originalComponentsList.add(component);
+                sortComponents(originalComponentsList);
+                FileUtil.writeFile(COMPONENT_DIR, getGson().toJson(originalComponentsList));
                 readSettings();
             } else {
                 SketchwareUtil.toastError(Helper.getResString(R.string.invalid_component));
@@ -250,8 +311,9 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
     }
 
     private void save(HashMap<String, Object> _item) {
-        componentsList.remove(_item);
-        FileUtil.writeFile(COMPONENT_DIR, getGson().toJson(componentsList));
+        originalComponentsList.remove(_item);
+        FileUtil.writeFile(COMPONENT_DIR, getGson().toJson(originalComponentsList));
+        readSettings();
     }
 
     private void export(int position) {
@@ -383,7 +445,10 @@ public class ManageCustomComponentActivity extends BaseAppCompatActivity {
                 onDoneInitializingViews();
                 root.setOnClickListener(v -> {
                     Intent intent = new Intent(getApplicationContext(), AddCustomComponentActivity.class);
-                    intent.putExtra("pos", getLayoutPosition());
+                    // Find actual position in original list if filtered
+                    HashMap<String, Object> item = components.get(getLayoutPosition());
+                    int originalPos = originalComponentsList.indexOf(item);
+                    intent.putExtra("pos", originalPos);
                     startActivity(intent);
                 });
                 setOnClickCollapseConfig(v -> v != root);

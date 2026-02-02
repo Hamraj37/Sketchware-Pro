@@ -26,6 +26,7 @@ public class ManageFontActivity extends BaseAppCompatActivity {
 
     public ImportFontFragment projectFontsFragment;
     public FontManagerFragment collectionFontsFragment;
+    public GoogleFontsFragment googleFontsFragment;
     public ManageFontBinding binding;
     private String sc_id;
 
@@ -66,7 +67,7 @@ public class ManageFontActivity extends BaseAppCompatActivity {
         sc_id = savedInstanceState == null ? getIntent().getStringExtra("sc_id") : savedInstanceState.getString("sc_id");
 
         binding.viewPager.setAdapter(new TabLayoutAdapter(getSupportFragmentManager()));
-        binding.viewPager.setOffscreenPageLimit(2);
+        binding.viewPager.setOffscreenPageLimit(3);
         binding.viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -76,8 +77,12 @@ public class ManageFontActivity extends BaseAppCompatActivity {
             public void onPageSelected(int position) {
                 binding.layoutBtnGroup.setVisibility(View.GONE);
                 binding.layoutBtnImport.setVisibility(View.GONE);
-                collectionFontsFragment.resetSelection();
-                projectFontsFragment.setSelectingMode(false);
+                if (collectionFontsFragment != null) {
+                    collectionFontsFragment.resetSelection();
+                }
+                if (projectFontsFragment != null) {
+                    projectFontsFragment.setSelectingMode(false);
+                }
                 changeFabState(position == 0);
             }
 
@@ -143,17 +148,18 @@ public class ManageFontActivity extends BaseAppCompatActivity {
     }
 
     private class TabLayoutAdapter extends FragmentPagerAdapter {
-        private final String[] labels = new String[2];
+        private final String[] labels = new String[3];
 
         public TabLayoutAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
             labels[0] = Helper.getResString(R.string.design_manager_tab_title_this_project);
             labels[1] = Helper.getResString(R.string.design_manager_tab_title_my_collection);
+            labels[2] = "Google Fonts";
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 3;
         }
 
         @Override
@@ -162,8 +168,10 @@ public class ManageFontActivity extends BaseAppCompatActivity {
             Fragment fragment = (Fragment) super.instantiateItem(container, position);
             if (position == 0) {
                 projectFontsFragment = (ImportFontFragment) fragment;
-            } else {
+            } else if (position == 1) {
                 collectionFontsFragment = (FontManagerFragment) fragment;
+            } else {
+                googleFontsFragment = (GoogleFontsFragment) fragment;
             }
             return fragment;
         }
@@ -171,7 +179,18 @@ public class ManageFontActivity extends BaseAppCompatActivity {
         @Override
         @NonNull
         public Fragment getItem(int position) {
-            return position == 0 ? new ImportFontFragment() : new FontManagerFragment();
+            switch (position) {
+                case 0:
+                    return new ImportFontFragment();
+                case 1:
+                    return new FontManagerFragment();
+                default:
+                    Bundle bundle = new Bundle();
+                    bundle.putString("sc_id", sc_id);
+                    GoogleFontsFragment fragment = new GoogleFontsFragment();
+                    fragment.setArguments(bundle);
+                    return fragment;
+            }
         }
 
         @Override

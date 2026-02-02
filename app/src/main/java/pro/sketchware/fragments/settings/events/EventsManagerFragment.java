@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -11,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -23,6 +26,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 
 import a.a.a.qA;
 import dev.pranav.filepicker.FilePickerCallback;
@@ -42,6 +46,7 @@ public class EventsManagerFragment extends qA {
 
     private FragmentEventsManagerBinding binding;
     private ArrayList<HashMap<String, Object>> listMap = new ArrayList<>();
+    private ArrayList<HashMap<String, Object>> originalListMap = new ArrayList<>();
 
     public static String getNumOfEvents(String name) {
         int eventAmount = 0;
@@ -67,6 +72,25 @@ public class EventsManagerFragment extends qA {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         configureToolbar(binding.toolbar);
+        
+        Menu menu = binding.toolbar.getMenu();
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        if (searchItem != null) {
+            SearchView searchView = (SearchView) searchItem.getActionView();
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    filter(newText);
+                    return true;
+                }
+            });
+        }
+
         binding.toolbar.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.action_import_events) {
@@ -127,6 +151,24 @@ public class EventsManagerFragment extends qA {
         }
     }
 
+    private void filter(String text) {
+        listMap.clear();
+        if (text.isEmpty()) {
+            listMap.addAll(originalListMap);
+        } else {
+            String lowerText = text.toLowerCase(Locale.getDefault());
+            for (HashMap<String, Object> item : originalListMap) {
+                String name = (String) item.get("name");
+                if (name != null && name.toLowerCase(Locale.getDefault()).contains(lowerText)) {
+                    listMap.add(item);
+                }
+            }
+        }
+        if (binding.listenersRecyclerView.getAdapter() != null) {
+            binding.listenersRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+    }
+
     private void showAddNewListenerDialog() {
         showListenerDialog(null, -1);
     }
@@ -162,8 +204,11 @@ public class EventsManagerFragment extends qA {
                         hashMap.put("imports", Helper.getText(listenerBinding.listenerCustomImport));
                         if (position >= 0) {
                             listMap.set(position, hashMap);
+                            int originalPos = originalListMap.indexOf(existingListener);
+                            if (originalPos != -1) originalListMap.set(originalPos, hashMap);
                         } else {
-                            listMap.add(hashMap);
+                            listMap.add(0, hashMap);
+                            originalListMap.add(0, hashMap);
                         }
                         addListenerItem();
                         di.dismiss();
@@ -176,13 +221,15 @@ public class EventsManagerFragment extends qA {
     }
 
     public void refreshList() {
-        listMap.clear();
+        originalListMap.clear();
         if (FileUtil.isExistFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath())) {
-            listMap = new Gson().fromJson(FileUtil.readFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath()), Helper.TYPE_MAP_LIST);
-            binding.listenersRecyclerView.setAdapter(new ListenersAdapter(listMap, requireContext()));
-            binding.listenersRecyclerView.getAdapter().notifyDataSetChanged();
+            originalListMap = new Gson().fromJson(FileUtil.readFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath()), Helper.TYPE_MAP_LIST);
+            Collections.reverse(originalListMap);
         }
-        Collections.reverse(listMap);
+        listMap.clear();
+        listMap.addAll(originalListMap);
+        binding.listenersRecyclerView.setAdapter(new ListenersAdapter(listMap, requireContext()));
+        binding.listenersRecyclerView.getAdapter().notifyDataSetChanged();
     }
 
     private void showImportEventsDialog() {
@@ -221,8 +268,10 @@ public class EventsManagerFragment extends qA {
         }
         events.addAll(data2);
         FileUtil.writeFile(EventsManagerConstants.EVENTS_FILE.getAbsolutePath(), new Gson().toJson(events));
-        listMap.addAll(data);
-        FileUtil.writeFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath(), new Gson().toJson(listMap));
+        
+        // Use a temporary list to avoid duplicates if necessary, or just add all
+        originalListMap.addAll(data);
+        FileUtil.writeFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath(), new Gson().toJson(originalListMap));
         refreshList();
         SketchwareUtil.toast("Successfully imported events");
     }
@@ -252,19 +301,26 @@ public class EventsManagerFragment extends qA {
             events = new Gson().fromJson(FileUtil.readFile(EventsManagerConstants.EVENTS_FILE.getAbsolutePath()), Helper.TYPE_MAP_LIST);
         }
         FileUtil.writeFile(new File(EventsManagerConstants.EVENT_EXPORT_LOCATION, "All_Events.txt").getAbsolutePath(),
-                new Gson().toJson(listMap) + "\n" + new Gson().toJson(events));
+                new Gson().toJson(originalListMap) + "\n" + new Gson().toJson(events));
         SketchwareUtil.toast("Successfully exported events to:\n" +
                 "/Internal storage/.sketchware/data/system/export/events", Toast.LENGTH_LONG);
     }
 
     private void addListenerItem() {
-        FileUtil.writeFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath(), new Gson().toJson(listMap));
+        ArrayList<HashMap<String, Object>> toSave = new ArrayList<>(originalListMap);
+        Collections.reverse(toSave);
+        FileUtil.writeFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath(), new Gson().toJson(toSave));
         refreshList();
     }
 
     private void deleteItem(int position) {
+        HashMap<String, Object> item = listMap.get(position);
         listMap.remove(position);
-        FileUtil.writeFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath(), new Gson().toJson(listMap));
+        originalListMap.remove(item);
+        
+        ArrayList<HashMap<String, Object>> toSave = new ArrayList<>(originalListMap);
+        Collections.reverse(toSave);
+        FileUtil.writeFile(EventsManagerConstants.LISTENERS_FILE.getAbsolutePath(), new Gson().toJson(toSave));
         refreshList();
     }
 
