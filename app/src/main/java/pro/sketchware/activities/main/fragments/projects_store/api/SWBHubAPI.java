@@ -41,6 +41,7 @@ public class SWBHubAPI {
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
+                            p.setDemoLink(entry.getValue().dataUrl);
                             p.setDownloads(String.valueOf(entry.getValue().downloads));
                             p.setUserName(entry.getValue().userName);
                             p.setPublishedTimestamp(String.valueOf(entry.getValue().timestamp));
@@ -63,6 +64,7 @@ public class SWBHubAPI {
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
+                            p.setDemoLink(entry.getValue().dataUrl);
                             p.setUserName(entry.getValue().userName);
                             p.setPublishedTimestamp(String.valueOf(entry.getValue().timestamp));
                             combined.add(p);
