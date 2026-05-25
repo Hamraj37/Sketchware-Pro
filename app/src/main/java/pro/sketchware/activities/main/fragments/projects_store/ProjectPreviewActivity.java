@@ -30,6 +30,7 @@ import pro.sketchware.activities.main.fragments.projects_store.adapters.ProjectS
 import pro.sketchware.activities.main.fragments.projects_store.api.ProjectModel;
 import pro.sketchware.databinding.FragmentStoreProjectPreviewBinding;
 import pro.sketchware.utility.FileUtil;
+import pro.sketchware.utility.Network;
 import pro.sketchware.utility.SketchwareUtil;
 import pro.sketchware.utility.UI;
 
@@ -105,7 +106,18 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         addChip(project.getCategory());
 
         String size = project.getProjectSize();
-        binding.filesize.setText("Size: " + (size != null ? size : "Unknown"));
+        if (size == null || size.equals("Unknown")) {
+            binding.filesize.setText("Size: Calculating...");
+            new Network().getFileSize(project.getDemoLink(), length -> {
+                if (length > 0) {
+                    binding.filesize.setText("Size: " + FileUtil.formatFileSize(length));
+                } else {
+                    binding.filesize.setText("Size: Unknown");
+                }
+            });
+        } else {
+            binding.filesize.setText("Size: " + size);
+        }
 
         String timestamp = project.getPublishedTimestamp();
         if (timestamp != null && !timestamp.isEmpty() && !timestamp.equals("null")) {

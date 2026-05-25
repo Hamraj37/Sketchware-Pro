@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -78,6 +79,29 @@ public class Network {
 
     public void get(String url, Map<String, String> headers, ResponseHandler handler) {
         request("GET", url, headers, null, null, handler);
+    }
+
+    public void getFileSize(String url, Consumer<Long> handler) {
+        Request request = new Request.Builder().url(url).head().build();
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(@NonNull okhttp3.Call call, @NonNull IOException e) {
+                runOnUiThread(() -> handler.accept(-1L));
+            }
+
+            @Override
+            public void onResponse(@NonNull okhttp3.Call call, @NonNull okhttp3.Response response) {
+                String contentLength = response.header("Content-Length");
+                long size = -1;
+                if (contentLength != null) {
+                    try {
+                        size = Long.parseLong(contentLength);
+                    } catch (NumberFormatException ignored) {}
+                }
+                long finalSize = size;
+                runOnUiThread(() -> handler.accept(finalSize));
+            }
+        });
     }
 
     public void post(String url, Map<String, String> headers, String body, ResponseHandler handler) {
