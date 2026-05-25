@@ -218,11 +218,14 @@ public class SWBHubAPI {
                 p.setTimestamp(String.valueOf(swbProject.timestamp));
                 p.setPublishedTimestamp(String.valueOf(swbProject.timestamp));
                 p.setDemoLink(swbProject.swbUrl); // Store SWB URL in demoLink for now
-                p.setScreenshot1(swbProject.screenshot1);
-                p.setScreenshot2(swbProject.screenshot2);
-                p.setScreenshot3(swbProject.screenshot3);
-                p.setScreenshot4(swbProject.screenshot4);
-                p.setScreenshot5(swbProject.screenshot5);
+                
+                String logo = swbProject.logoUrl;
+                p.setScreenshot1(swbProject.screenshot1 != null ? swbProject.screenshot1 : logo);
+                p.setScreenshot2(swbProject.screenshot2 != null ? swbProject.screenshot2 : logo);
+                p.setScreenshot3(swbProject.screenshot3 != null ? swbProject.screenshot3 : logo);
+                p.setScreenshot4(swbProject.screenshot4 != null ? swbProject.screenshot4 : logo);
+                p.setScreenshot5(swbProject.screenshot5 != null ? swbProject.screenshot5 : logo);
+
                 p.setIsEditorChoice("0");
                 p.setIsVerified("1");
                 p.setCategory("SWB Hub");

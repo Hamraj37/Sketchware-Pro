@@ -55,18 +55,18 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         binding.description.setText(project.getDescription());
 
         String whatIsNew = project.getWhatsnew();
-        if (whatIsNew.isEmpty()) {
+        if (whatIsNew == null || whatIsNew.isEmpty()) {
             binding.cardWhatIsNew.setVisibility(View.GONE);
         } else {
             binding.cardWhatIsNew.setVisibility(View.VISIBLE);
             binding.whatIsNew.setText(whatIsNew);
         }
 
-        if (project.getIsEditorChoice().equals("1")) {
+        if ("1".equals(project.getIsEditorChoice())) {
             addChip("Editor's Choice");
         }
 
-        if (project.getIsVerified().equals("1")) {
+        if ("1".equals(project.getIsVerified())) {
             addChip("Verified");
         }
 
@@ -74,7 +74,18 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
         binding.downloads.setText("Downloads: " + project.getDownloads());
         binding.filesize.setText("Size: " + project.getProjectSize());
-        binding.timestamp.setText("Released: " + DateFormat.getDateInstance().format(new Date(Long.parseLong(project.getPublishedTimestamp()))));
+
+        String timestamp = project.getPublishedTimestamp();
+        if (timestamp != null && !timestamp.isEmpty() && !timestamp.equals("null")) {
+            try {
+                binding.timestamp.setText("Released: " + DateFormat.getDateInstance().format(new Date(Long.parseLong(timestamp))));
+            } catch (NumberFormatException e) {
+                binding.timestamp.setText("Released: Unknown");
+            }
+        } else {
+            binding.timestamp.setText("Released: Unknown");
+        }
+
         binding.btnComments.setOnClickListener(v -> openCommentsSheet());
         binding.btnDownload.setOnClickListener(v -> downloadFile());
         binding.btnOpenIn.setOnClickListener(v -> openProject());

@@ -33,7 +33,11 @@ public class UI {
                 return;
             }
         }
-        Glide.with(image.getContext()).load(url).into(image);
+        Glide.with(image.getContext())
+                .load(url)
+                .placeholder(R.drawable.default_image)
+                .error(R.drawable.default_image)
+                .into(image);
     }
 
     public static void advancedCorners(View view, int color) {
