@@ -59,6 +59,8 @@ public class ProjectsStoreFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        binding.swipeRefresh.setOnRefreshListener(this::fetchData);
+
         setupRecyclerView(binding.editorsChoiceProjectsRecyclerView);
         fetchData();
 
@@ -159,29 +161,43 @@ public class ProjectsStoreFragment extends Fragment {
 
     private void fetchData() {
         var activity = getActivity();
+        final int[] finishedRequests = {0};
+        final int totalRequests = 4;
+
+        Runnable checkFinished = () -> {
+            finishedRequests[0]++;
+            if (finishedRequests[0] >= totalRequests) {
+                binding.swipeRefresh.setRefreshing(false);
+            }
+        };
+
         swbHubAPI.getEditorsChoicerProjects(projectModel -> {
             if (projectModel != null) {
                 editorsChoiceAdapter = new StorePagerProjectsAdapter(projectModel.getProjects(), activity);
                 binding.editorsChoiceProjectsRecyclerView.setAdapter(editorsChoiceAdapter);
             }
+            checkFinished.run();
         });
         swbHubAPI.getRecentProjects(projectModel -> {
             if (projectModel != null) {
                 recentProjectsAdapter = new StoreProjectsAdapter(projectModel.getProjects(), activity);
                 binding.recentProjectsRecyclerView.setAdapter(recentProjectsAdapter);
             }
+            checkFinished.run();
         });
         swbHubAPI.getRecentComponents(projectModel -> {
             if (projectModel != null) {
                 componentsAdapter = new StoreProjectsAdapter(projectModel.getProjects(), activity);
                 binding.componentsRecyclerView.setAdapter(componentsAdapter);
             }
+            checkFinished.run();
         });
         swbHubAPI.getRecentBlocks(projectModel -> {
             if (projectModel != null) {
                 blocksAdapter = new StoreProjectsAdapter(projectModel.getProjects(), activity);
                 binding.blocksRecyclerView.setAdapter(blocksAdapter);
             }
+            checkFinished.run();
         });
     }
 

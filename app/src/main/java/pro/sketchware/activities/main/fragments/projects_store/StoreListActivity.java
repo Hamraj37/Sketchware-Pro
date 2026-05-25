@@ -43,6 +43,8 @@ public class StoreListActivity extends BaseAppCompatActivity {
         UI.addSystemWindowInsetToPadding(binding.recyclerView, true, false, true, true);
 
         int type = getIntent().getIntExtra(EXTRA_TYPE, TYPE_PROJECTS);
+        binding.swipeRefresh.setOnRefreshListener(() -> loadData(type));
+
         loadData(type);
     }
 
@@ -55,6 +57,7 @@ public class StoreListActivity extends BaseAppCompatActivity {
                         adapter = new StoreProjectsAdapter(model.getProjects(), this);
                         binding.recyclerView.setAdapter(adapter);
                     }
+                    binding.swipeRefresh.setRefreshing(false);
                 });
             }
             case TYPE_COMPONENTS -> {
@@ -64,6 +67,7 @@ public class StoreListActivity extends BaseAppCompatActivity {
                         adapter = new StoreProjectsAdapter(model.getProjects(), this);
                         binding.recyclerView.setAdapter(adapter);
                     }
+                    binding.swipeRefresh.setRefreshing(false);
                 });
             }
             case TYPE_BLOCKS -> {
@@ -73,6 +77,7 @@ public class StoreListActivity extends BaseAppCompatActivity {
                         adapter = new StoreProjectsAdapter(model.getProjects(), this);
                         binding.recyclerView.setAdapter(adapter);
                     }
+                    binding.swipeRefresh.setRefreshing(false);
                 });
             }
         }
