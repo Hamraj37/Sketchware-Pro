@@ -25,6 +25,14 @@ import pro.sketchware.R;
 
 public class UI {
     public static void loadImageFromUrl(ImageView image, String url) {
+        if (url != null && url.startsWith("res:")) {
+            String resName = url.substring(4);
+            int resId = image.getContext().getResources().getIdentifier(resName, "drawable", image.getContext().getPackageName());
+            if (resId != 0) {
+                image.setImageResource(resId);
+                return;
+            }
+        }
         Glide.with(image.getContext()).load(url).into(image);
     }
 

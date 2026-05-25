@@ -63,14 +63,19 @@ public class SWBHubAPI {
                             p.setId(id);
                             p.setTitle(swbComp.componentName);
                             p.setDescription(swbComp.componentDescription);
-                            p.setIcon(swbComp.logoUrl);
+                            p.setIcon("res:ic_mtrl_component");
                             p.setDownloads(String.valueOf(swbComp.downloads));
                             p.setUid(swbComp.userId);
                             p.setUserName(swbComp.userName);
                             p.setUserProfilePic(swbComp.profilePicUrl);
                             p.setTimestamp(String.valueOf(swbComp.timestamp));
+                            p.setPublishedTimestamp(String.valueOf(swbComp.timestamp));
                             p.setDemoLink(swbComp.dataUrl);
                             p.setCategory("Component");
+                            p.setIsEditorChoice("0");
+                            p.setIsVerified("1");
+                            p.setProjectSize("Unknown");
+                            p.setWhatsnew("");
                             components.add(p);
                         });
                     }
@@ -104,12 +109,18 @@ public class SWBHubAPI {
                             p.setId(id);
                             p.setTitle(swbBlock.blockName);
                             p.setDescription(swbBlock.blockDescription);
+                            p.setIcon("res:ic_mtrl_block");
                             p.setUid(swbBlock.userId);
                             p.setUserName(swbBlock.userName);
                             p.setUserProfilePic(swbBlock.profilePicUrl);
                             p.setTimestamp(String.valueOf(swbBlock.timestamp));
+                            p.setPublishedTimestamp(String.valueOf(swbBlock.timestamp));
                             p.setDemoLink(swbBlock.dataUrl);
                             p.setCategory("Block");
+                            p.setIsEditorChoice("0");
+                            p.setIsVerified("1");
+                            p.setProjectSize("Unknown");
+                            p.setWhatsnew("");
                             blocks.add(p);
                         });
                     }
