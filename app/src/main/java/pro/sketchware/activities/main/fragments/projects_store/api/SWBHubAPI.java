@@ -36,6 +36,12 @@ public class SWBHubAPI {
                             p.setIcon("res:ic_mtrl_component");
                             p.setCategory("Component");
                             p.setScreenshot1(entry.getValue().logoUrl); // Use logo as fallback for screenshot
+                            p.setWhatsnew("");
+                            p.setIsEditorChoice("1");
+                            p.setIsVerified("1");
+                            p.setDownloads(String.valueOf(entry.getValue().downloads));
+                            p.setUserName(entry.getValue().userName);
+                            p.setPublishedTimestamp(String.valueOf(entry.getValue().timestamp));
                             combined.add(p);
                         });
                     }
@@ -50,6 +56,11 @@ public class SWBHubAPI {
                             p.setIcon("res:ic_mtrl_block");
                             p.setCategory("Block");
                             p.setScreenshot1(entry.getValue().profilePicUrl); // Use profile as fallback
+                            p.setWhatsnew("");
+                            p.setIsEditorChoice("1");
+                            p.setIsVerified("1");
+                            p.setUserName(entry.getValue().userName);
+                            p.setPublishedTimestamp(String.valueOf(entry.getValue().timestamp));
                             combined.add(p);
                         });
                     }

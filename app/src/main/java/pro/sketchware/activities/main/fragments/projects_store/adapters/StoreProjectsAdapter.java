@@ -45,8 +45,13 @@ public class StoreProjectsAdapter extends RecyclerView.Adapter<StoreProjectsAdap
         ProjectModel.Project project = filteredProjects.get(position);
 
         holder.binding.title.setText(project.getTitle());
-        holder.binding.likes.setText(project.getLikes());
-        holder.binding.downloads.setText(project.getDownloads());
+        
+        String likes = project.getLikes();
+        holder.binding.likes.setText(likes != null ? likes : "0");
+        
+        String downloads = project.getDownloads();
+        holder.binding.downloads.setText(downloads != null ? downloads : "0");
+
         loadImageFromUrl(holder.binding.icon, project.getIcon());
 
         holder.binding.getRoot().setOnClickListener(v -> openProject(project));
