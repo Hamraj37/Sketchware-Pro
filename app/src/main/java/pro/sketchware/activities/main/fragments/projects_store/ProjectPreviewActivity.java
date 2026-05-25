@@ -104,8 +104,8 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
         addChip(project.getCategory());
 
-        binding.downloads.setText("Downloads: " + project.getDownloads());
-        binding.filesize.setText("Size: " + project.getProjectSize());
+        String size = project.getProjectSize();
+        binding.filesize.setText("Size: " + (size != null ? size : "Unknown"));
 
         String timestamp = project.getPublishedTimestamp();
         if (timestamp != null && !timestamp.isEmpty() && !timestamp.equals("null")) {

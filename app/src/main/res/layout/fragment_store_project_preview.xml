@@ -147,32 +147,12 @@
                 android:layout_marginHorizontal="24dp">
 
                 <ImageView
-                    android:id="@+id/icon_downloads"
+                    android:id="@+id/icon_timestamp"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:padding="2dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/ic_mtrl_download" />
-
-                <TextView
-                    android:id="@+id/downloads"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="3dp"
-                    app:layout_constraintBottom_toBottomOf="@id/icon_downloads"
-                    app:layout_constraintStart_toEndOf="@id/icon_downloads"
-                    app:layout_constraintTop_toTopOf="@id/icon_downloads"
-                    tools:text="Downloads: 140920" />
-
-                <ImageView
-                    android:id="@+id/icon_timestamp"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginTop="3dp"
-                    android:padding="2dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/icon_downloads"
                     app:srcCompat="@drawable/ic_mtrl_time" />
 
                 <TextView

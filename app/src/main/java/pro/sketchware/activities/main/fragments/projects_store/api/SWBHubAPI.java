@@ -30,21 +30,23 @@ public class SWBHubAPI {
                     if (swbResponse.components != null) {
                         swbResponse.components.entrySet().stream().limit(1).forEach(entry -> {
                             ProjectModel.Project p = new ProjectModel.Project();
+                            SWBHubResponse.SWBHubComponent val = entry.getValue();
                             p.setId(entry.getKey());
-                            p.setTitle(entry.getValue().componentName);
-                            p.setDescription(entry.getValue().componentDescription);
+                            p.setTitle(val.componentName);
+                            p.setDescription(val.componentDescription);
                             p.setIcon("res:ic_mtrl_component");
                             p.setCategory("Component");
-                            p.setScreenshot1(entry.getValue().logoUrl); 
-                            p.setScreenshot2(entry.getValue().logoUrl);
-                            p.setScreenshot3(entry.getValue().logoUrl);
+                            p.setScreenshot1(val.logoUrl); 
+                            p.setScreenshot2(val.logoUrl);
+                            p.setScreenshot3(val.logoUrl);
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
-                            p.setDemoLink(entry.getValue().dataUrl);
-                            p.setDownloads(String.valueOf(entry.getValue().downloads));
-                            p.setUserName(entry.getValue().userName);
-                            p.setPublishedTimestamp(String.valueOf(entry.getValue().timestamp));
+                            p.setDemoLink(val.dataUrl);
+                            p.setDownloads(String.valueOf(val.downloads));
+                            p.setProjectSize(val.projectSize != null ? val.projectSize : "Unknown");
+                            p.setUserName(val.userName);
+                            p.setPublishedTimestamp(String.valueOf(val.timestamp));
                             combined.add(p);
                         });
                     }
@@ -53,20 +55,23 @@ public class SWBHubAPI {
                     if (swbResponse.blocks != null) {
                         swbResponse.blocks.entrySet().stream().limit(1).forEach(entry -> {
                             ProjectModel.Project p = new ProjectModel.Project();
+                            SWBHubResponse.SWBHubBlock val = entry.getValue();
                             p.setId(entry.getKey());
-                            p.setTitle(entry.getValue().blockName);
-                            p.setDescription(entry.getValue().blockDescription);
+                            p.setTitle(val.blockName);
+                            p.setDescription(val.blockDescription);
                             p.setIcon("res:ic_mtrl_block");
                             p.setCategory("Block");
-                            p.setScreenshot1(entry.getValue().profilePicUrl); 
-                            p.setScreenshot2(entry.getValue().profilePicUrl);
-                            p.setScreenshot3(entry.getValue().profilePicUrl);
+                            p.setScreenshot1(val.profilePicUrl); 
+                            p.setScreenshot2(val.profilePicUrl);
+                            p.setScreenshot3(val.profilePicUrl);
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
-                            p.setDemoLink(entry.getValue().dataUrl);
-                            p.setUserName(entry.getValue().userName);
-                            p.setPublishedTimestamp(String.valueOf(entry.getValue().timestamp));
+                            p.setDemoLink(val.dataUrl);
+                            p.setDownloads(String.valueOf(val.downloads));
+                            p.setProjectSize(val.projectSize != null ? val.projectSize : "Unknown");
+                            p.setUserName(val.userName);
+                            p.setPublishedTimestamp(String.valueOf(val.timestamp));
                             combined.add(p);
                         });
                     }
@@ -137,7 +142,8 @@ public class SWBHubAPI {
                             p.setScreenshot3(swbComp.logoUrl);
                             p.setIsEditorChoice("0");
                             p.setIsVerified("1");
-                            p.setProjectSize("Unknown");
+                            p.setDownloads(String.valueOf(swbComp.downloads));
+                            p.setProjectSize(swbComp.projectSize != null ? swbComp.projectSize : "Unknown");
                             p.setWhatsnew("");
                             components.add(p);
                         });
@@ -185,7 +191,8 @@ public class SWBHubAPI {
                             p.setScreenshot3(swbBlock.profilePicUrl);
                             p.setIsEditorChoice("0");
                             p.setIsVerified("1");
-                            p.setProjectSize("Unknown");
+                            p.setDownloads(String.valueOf(swbBlock.downloads));
+                            p.setProjectSize(swbBlock.projectSize != null ? swbBlock.projectSize : "Unknown");
                             p.setWhatsnew("");
                             blocks.add(p);
                         });
@@ -252,7 +259,7 @@ public class SWBHubAPI {
                 p.setIsEditorChoice("0");
                 p.setIsVerified("1");
                 p.setCategory("SWB Hub");
-                p.setProjectSize("Unknown");
+                p.setProjectSize(swbProject.projectSize != null ? swbProject.projectSize : "Unknown");
                 p.setWhatsnew("");
                 projects.add(p);
             });

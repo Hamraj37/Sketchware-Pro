@@ -23,6 +23,7 @@ public class SWBHubResponse {
         public String userId;
         public String userName;
         public int downloads;
+        public String projectSize;
         public String screenshot1;
         public String screenshot2;
         public String screenshot3;
@@ -40,6 +41,7 @@ public class SWBHubResponse {
         public String userName;
         public long timestamp;
         public int downloads;
+        public String projectSize;
     }
 
     public static class SWBHubBlock {
@@ -50,5 +52,7 @@ public class SWBHubResponse {
         public String userId;
         public String userName;
         public long timestamp;
+        public int downloads;
+        public String projectSize;
     }
 }
