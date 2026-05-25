@@ -1,9 +1,11 @@
 package pro.sketchware.activities.main.fragments.projects_store;
 
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.besome.sketch.lib.base.BaseAppCompatActivity;
@@ -22,6 +24,7 @@ public class StoreListActivity extends BaseAppCompatActivity {
 
     private ActivityStoreListBinding binding;
     private final SWBHubAPI swbHubAPI = new SWBHubAPI();
+    private StoreProjectsAdapter adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,7 +52,8 @@ public class StoreListActivity extends BaseAppCompatActivity {
                 setTitle("Recent Projects");
                 swbHubAPI.getRecentProjects(model -> {
                     if (model != null) {
-                        binding.recyclerView.setAdapter(new StoreProjectsAdapter(model.getProjects(), this));
+                        adapter = new StoreProjectsAdapter(model.getProjects(), this);
+                        binding.recyclerView.setAdapter(adapter);
                     }
                 });
             }
@@ -57,7 +61,8 @@ public class StoreListActivity extends BaseAppCompatActivity {
                 setTitle("Recent Components");
                 swbHubAPI.getRecentComponents(model -> {
                     if (model != null) {
-                        binding.recyclerView.setAdapter(new StoreProjectsAdapter(model.getProjects(), this));
+                        adapter = new StoreProjectsAdapter(model.getProjects(), this);
+                        binding.recyclerView.setAdapter(adapter);
                     }
                 });
             }
@@ -65,11 +70,36 @@ public class StoreListActivity extends BaseAppCompatActivity {
                 setTitle("Recent Blocks");
                 swbHubAPI.getRecentBlocks(model -> {
                     if (model != null) {
-                        binding.recyclerView.setAdapter(new StoreProjectsAdapter(model.getProjects(), this));
+                        adapter = new StoreProjectsAdapter(model.getProjects(), this);
+                        binding.recyclerView.setAdapter(adapter);
                     }
                 });
             }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(pro.sketchware.R.menu.projects_fragment_menu, menu);
+        MenuItem searchItem = menu.findItem(pro.sketchware.R.id.searchProjects);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (adapter != null) {
+                        adapter.filterData(newText);
+                    }
+                    return true;
+                }
+            });
+        }
+        return true;
     }
 
     @Override

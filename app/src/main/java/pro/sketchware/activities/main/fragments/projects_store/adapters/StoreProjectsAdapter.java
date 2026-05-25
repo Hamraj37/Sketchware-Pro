@@ -21,12 +21,14 @@ import pro.sketchware.databinding.ViewStoreProjectItemBinding;
 
 public class StoreProjectsAdapter extends RecyclerView.Adapter<StoreProjectsAdapter.ViewHolder> {
 
-    private final List<ProjectModel.Project> projects;
+    private final List<ProjectModel.Project> originalProjects;
+    private List<ProjectModel.Project> filteredProjects;
     private final FragmentActivity context;
     private final Gson gson = new Gson();
 
     public StoreProjectsAdapter(List<ProjectModel.Project> projects, FragmentActivity context) {
-        this.projects = projects;
+        this.originalProjects = projects;
+        this.filteredProjects = projects;
         this.context = context;
     }
 
@@ -40,7 +42,7 @@ public class StoreProjectsAdapter extends RecyclerView.Adapter<StoreProjectsAdap
 
     @Override
     public void onBindViewHolder(StoreProjectsAdapter.ViewHolder holder, int position) {
-        ProjectModel.Project project = projects.get(position);
+        ProjectModel.Project project = filteredProjects.get(position);
 
         holder.binding.title.setText(project.getTitle());
         holder.binding.likes.setText(project.getLikes());
@@ -52,10 +54,22 @@ public class StoreProjectsAdapter extends RecyclerView.Adapter<StoreProjectsAdap
 
     @Override
     public int getItemCount() {
-        if (projects == null) {
+        if (filteredProjects == null) {
             return 0;
         }
-        return projects.size();
+        return filteredProjects.size();
+    }
+
+    public void filterData(String query) {
+        if (query.isEmpty()) {
+            filteredProjects = originalProjects;
+        } else {
+            filteredProjects = originalProjects.stream()
+                    .filter(project -> project.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                            (project.getDescription() != null && project.getDescription().toLowerCase().contains(query.toLowerCase())))
+                    .toList();
+        }
+        notifyDataSetChanged();
     }
 
     private void openProject(ProjectModel.Project project) {

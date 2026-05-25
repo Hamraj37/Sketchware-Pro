@@ -3,11 +3,16 @@ package pro.sketchware.activities.main.fragments.projects_store;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
@@ -16,6 +21,7 @@ import androidx.recyclerview.widget.SnapHelper;
 
 import com.google.android.material.transition.MaterialFadeThrough;
 
+import pro.sketchware.R;
 import pro.sketchware.BuildConfig;
 import pro.sketchware.activities.main.fragments.projects_store.adapters.StorePagerProjectsAdapter;
 import pro.sketchware.activities.main.fragments.projects_store.adapters.StoreProjectsAdapter;
@@ -27,6 +33,11 @@ import pro.sketchware.utility.UI;
 public class ProjectsStoreFragment extends Fragment {
     private FragmentProjectsStoreBinding binding;
     private SWBHubAPI swbHubAPI;
+    private StorePagerProjectsAdapter editorsChoiceAdapter;
+    private StoreProjectsAdapter recentProjectsAdapter;
+    private StoreProjectsAdapter componentsAdapter;
+    private StoreProjectsAdapter blocksAdapter;
+    private MenuProvider menuProvider;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,6 +66,8 @@ public class ProjectsStoreFragment extends Fragment {
         binding.btnSeeAllComponents.setOnClickListener(v -> openStoreList(StoreListActivity.TYPE_COMPONENTS));
         binding.btnSeeAllBlocks.setOnClickListener(v -> openStoreList(StoreListActivity.TYPE_BLOCKS));
 
+        setupMenu();
+
         UI.addSystemWindowInsetToPadding(binding.textEditorsChoice, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.editorsChoiceProjectsRecyclerView, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.textRecent, true, false, true, false);
@@ -69,7 +82,60 @@ public class ProjectsStoreFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (menuProvider != null) {
+            requireActivity().removeMenuProvider(menuProvider);
+        }
         binding = null; // avoid memory leaks
+    }
+
+    private void setupMenu() {
+        menuProvider = new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                menuInflater.inflate(R.menu.projects_fragment_menu, menu);
+                MenuItem searchItem = menu.findItem(R.id.searchProjects);
+                SearchView searchView = (SearchView) searchItem.getActionView();
+                if (searchView != null) {
+                    searchView.setQueryHint("Search SWB Hub...");
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override
+                        public boolean onQueryTextSubmit(String query) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onQueryTextChange(String newText) {
+                            filterAll(newText);
+                            return true;
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
+                return false;
+            }
+        };
+        requireActivity().addMenuProvider(menuProvider);
+    }
+
+    private void filterAll(String query) {
+        if (editorsChoiceAdapter != null) editorsChoiceAdapter.filterData(query);
+        if (recentProjectsAdapter != null) recentProjectsAdapter.filterData(query);
+        if (componentsAdapter != null) componentsAdapter.filterData(query);
+        if (blocksAdapter != null) blocksAdapter.filterData(query);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (getActivity() == null) return;
+        if (hidden) {
+            requireActivity().removeMenuProvider(menuProvider);
+        } else {
+            requireActivity().addMenuProvider(menuProvider);
+        }
     }
 
     private void setupRecyclerView(RecyclerView recyclerView) {
@@ -95,22 +161,26 @@ public class ProjectsStoreFragment extends Fragment {
         var activity = getActivity();
         swbHubAPI.getEditorsChoicerProjects(projectModel -> {
             if (projectModel != null) {
-                binding.editorsChoiceProjectsRecyclerView.setAdapter(new StorePagerProjectsAdapter(projectModel.getProjects(), activity));
+                editorsChoiceAdapter = new StorePagerProjectsAdapter(projectModel.getProjects(), activity);
+                binding.editorsChoiceProjectsRecyclerView.setAdapter(editorsChoiceAdapter);
             }
         });
         swbHubAPI.getRecentProjects(projectModel -> {
             if (projectModel != null) {
-                binding.recentProjectsRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
+                recentProjectsAdapter = new StoreProjectsAdapter(projectModel.getProjects(), activity);
+                binding.recentProjectsRecyclerView.setAdapter(recentProjectsAdapter);
             }
         });
         swbHubAPI.getRecentComponents(projectModel -> {
             if (projectModel != null) {
-                binding.componentsRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
+                componentsAdapter = new StoreProjectsAdapter(projectModel.getProjects(), activity);
+                binding.componentsRecyclerView.setAdapter(componentsAdapter);
             }
         });
         swbHubAPI.getRecentBlocks(projectModel -> {
             if (projectModel != null) {
-                binding.blocksRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
+                blocksAdapter = new StoreProjectsAdapter(projectModel.getProjects(), activity);
+                binding.blocksRecyclerView.setAdapter(blocksAdapter);
             }
         });
     }

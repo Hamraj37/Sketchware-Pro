@@ -21,12 +21,14 @@ import pro.sketchware.databinding.ViewStoreProjectPagerItemBinding;
 
 public class StorePagerProjectsAdapter extends RecyclerView.Adapter<StorePagerProjectsAdapter.ViewHolder> {
 
-    private final List<ProjectModel.Project> projects;
+    private final List<ProjectModel.Project> originalProjects;
+    private List<ProjectModel.Project> filteredProjects;
     private final FragmentActivity context;
     private final Gson gson = new Gson();
 
     public StorePagerProjectsAdapter(List<ProjectModel.Project> projects, FragmentActivity context) {
-        this.projects = projects;
+        this.originalProjects = projects;
+        this.filteredProjects = projects;
         this.context = context;
     }
 
@@ -40,7 +42,7 @@ public class StorePagerProjectsAdapter extends RecyclerView.Adapter<StorePagerPr
 
     @Override
     public void onBindViewHolder(StorePagerProjectsAdapter.ViewHolder holder, int position) {
-        ProjectModel.Project project = projects.get(position);
+        ProjectModel.Project project = filteredProjects.get(position);
 
         holder.binding.projectTitle.setText(project.getTitle());
         holder.binding.projectDesc.setText(project.getDescription());
@@ -57,10 +59,22 @@ public class StorePagerProjectsAdapter extends RecyclerView.Adapter<StorePagerPr
 
     @Override
     public int getItemCount() {
-        if (projects == null) {
+        if (filteredProjects == null) {
             return 0;
         }
-        return projects.size();
+        return filteredProjects.size();
+    }
+
+    public void filterData(String query) {
+        if (query.isEmpty()) {
+            filteredProjects = originalProjects;
+        } else {
+            filteredProjects = originalProjects.stream()
+                    .filter(project -> project.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                            (project.getDescription() != null && project.getDescription().toLowerCase().contains(query.toLowerCase())))
+                    .toList();
+        }
+        notifyDataSetChanged();
     }
 
     private void openProject(ProjectModel.Project project) {

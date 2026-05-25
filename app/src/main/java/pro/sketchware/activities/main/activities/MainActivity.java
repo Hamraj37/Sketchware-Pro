@@ -175,6 +175,9 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         binding.statusBarOverlapper.setMinimumHeight(UI.getStatusBarHeight(this));
         UI.addSystemWindowInsetToPadding(binding.appbar, true, false, true, false);
 
+        binding.toolbar.setOnClickListener(v -> expandSearchView());
+        binding.toolbarTitle.setOnClickListener(v -> expandSearchView());
+
         u = new DB(getApplicationContext(), "U1");
         int u1I0 = u.a("U1I0", -1);
         long u1I1 = u.e("U1I1");
@@ -366,6 +369,13 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         activeFragment = storeFragment;
         currentNavItemId = R.id.item_swb_hub;
         backToProjects.setEnabled(true);
+    }
+
+    private void expandSearchView() {
+        MenuItem searchItem = binding.toolbar.getMenu().findItem(R.id.searchProjects);
+        if (searchItem != null) {
+            searchItem.expandActionView();
+        }
     }
 
     @NonNull
