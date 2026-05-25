@@ -35,7 +35,9 @@ public class SWBHubAPI {
                             p.setDescription(entry.getValue().componentDescription);
                             p.setIcon("res:ic_mtrl_component");
                             p.setCategory("Component");
-                            p.setScreenshot1(entry.getValue().logoUrl); // Use logo as fallback for screenshot
+                            p.setScreenshot1(entry.getValue().logoUrl); 
+                            p.setScreenshot2(entry.getValue().logoUrl);
+                            p.setScreenshot3(entry.getValue().logoUrl);
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
@@ -55,7 +57,9 @@ public class SWBHubAPI {
                             p.setDescription(entry.getValue().blockDescription);
                             p.setIcon("res:ic_mtrl_block");
                             p.setCategory("Block");
-                            p.setScreenshot1(entry.getValue().profilePicUrl); // Use profile as fallback
+                            p.setScreenshot1(entry.getValue().profilePicUrl); 
+                            p.setScreenshot2(entry.getValue().profilePicUrl);
+                            p.setScreenshot3(entry.getValue().profilePicUrl);
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
@@ -126,6 +130,9 @@ public class SWBHubAPI {
                             p.setPublishedTimestamp(String.valueOf(swbComp.timestamp));
                             p.setDemoLink(swbComp.dataUrl);
                             p.setCategory("Component");
+                            p.setScreenshot1(swbComp.logoUrl);
+                            p.setScreenshot2(swbComp.logoUrl);
+                            p.setScreenshot3(swbComp.logoUrl);
                             p.setIsEditorChoice("0");
                             p.setIsVerified("1");
                             p.setProjectSize("Unknown");
@@ -171,6 +178,9 @@ public class SWBHubAPI {
                             p.setPublishedTimestamp(String.valueOf(swbBlock.timestamp));
                             p.setDemoLink(swbBlock.dataUrl);
                             p.setCategory("Block");
+                            p.setScreenshot1(swbBlock.profilePicUrl);
+                            p.setScreenshot2(swbBlock.profilePicUrl);
+                            p.setScreenshot3(swbBlock.profilePicUrl);
                             p.setIsEditorChoice("0");
                             p.setIsVerified("1");
                             p.setProjectSize("Unknown");
