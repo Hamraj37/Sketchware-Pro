@@ -1,9 +1,13 @@
 package pro.sketchware.activities.main.fragments.projects_store;
 
 import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -16,13 +20,16 @@ import com.besome.sketch.lib.base.BaseAppCompatActivity;
 import com.google.android.material.chip.Chip;
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import mod.hey.studios.project.backup.BackupRestoreManager;
 import pro.sketchware.activities.main.fragments.projects_store.adapters.ProjectScreenshotsAdapter;
 import pro.sketchware.activities.main.fragments.projects_store.api.ProjectModel;
 import pro.sketchware.databinding.FragmentStoreProjectPreviewBinding;
+import pro.sketchware.utility.FileUtil;
 import pro.sketchware.utility.SketchwareUtil;
 import pro.sketchware.utility.UI;
 
@@ -32,6 +39,18 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
     private FragmentStoreProjectPreviewBinding binding;
     private ProjectModel.Project project;
     private boolean isTitleContainerShown;
+    private long downloadId = -1;
+
+    private final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            if (downloadId != -1 && downloadId == id) {
+                downloadId = -1; // Reset to prevent double triggering
+                handleDownloadComplete(id);
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,7 +60,20 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         binding = FragmentStoreProjectPreviewBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(downloadReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(downloadReceiver, filter);
+        }
+
         loadProjectData(getIntent().getExtras());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(downloadReceiver);
     }
 
     private void loadProjectData(Bundle bundle) {
@@ -209,10 +241,60 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
         DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (downloadManager != null) {
-            downloadManager.enqueue(request);
+            downloadId = downloadManager.enqueue(request);
             SketchwareUtil.toast("Download started...");
         } else {
             SketchwareUtil.toastError("Download Manager not available");
+        }
+    }
+
+    private void handleDownloadComplete(long id) {
+        DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (downloadManager == null) return;
+
+        DownloadManager.Query query = new DownloadManager.Query();
+        query.setFilterById(id);
+        try (Cursor cursor = downloadManager.query(query)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int statusColumn = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                if (statusColumn != -1 && DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(statusColumn)) {
+                    // Method 1: Use getUriForDownloadedFile and convert it
+                    Uri downloadUri = downloadManager.getUriForDownloadedFile(id);
+                    String path = null;
+                    if (downloadUri != null) {
+                        path = FileUtil.convertUriToFilePath(this, downloadUri);
+                    }
+
+                    // Method 2: Use local URI column
+                    if (path == null) {
+                        int uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
+                        if (uriIndex != -1) {
+                            String uriString = cursor.getString(uriIndex);
+                            if (uriString != null) {
+                                path = FileUtil.convertUriToFilePath(this, Uri.parse(uriString));
+                            }
+                        }
+                    }
+
+                    // Method 3: Fallback to direct path from URI
+                    if (path == null) {
+                        int uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
+                        if (uriIndex != -1) {
+                            String uriString = cursor.getString(uriIndex);
+                            if (uriString != null) {
+                                path = Uri.parse(uriString).getPath();
+                            }
+                        }
+                    }
+
+                    if (path != null && path.toLowerCase().endsWith(".swb")) {
+                        SketchwareUtil.toast("Download complete, restoring project...");
+                        new BackupRestoreManager(this).doRestore(path, true);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
