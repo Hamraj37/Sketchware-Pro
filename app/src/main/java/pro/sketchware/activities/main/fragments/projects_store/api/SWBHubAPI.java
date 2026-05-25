@@ -16,12 +16,53 @@ public class SWBHubAPI {
     private final Gson gson = new Gson();
 
     public void getEditorsChoicerProjects(Consumer<ProjectModel> consumer) {
-        getProjects(projects -> {
-            ProjectModel model = new ProjectModel();
-            model.setStatus("success");
-            // For now, let's just take the first 5 as editor's choice
-            model.setProjects(projects.stream().limit(5).collect(Collectors.toList()));
-            consumer.accept(model);
+        network.get(BASE_URL, response -> {
+            if (response != null && !response.isEmpty()) {
+                try {
+                    SWBHubResponse swbResponse = gson.fromJson(response, SWBHubResponse.class);
+                    List<ProjectModel.Project> combined = new ArrayList<>();
+
+                    // Add some projects (top 3)
+                    List<ProjectModel.Project> projects = convertToProjectList(swbResponse);
+                    combined.addAll(projects.stream().limit(3).collect(Collectors.toList()));
+
+                    // Add some components (top 1)
+                    if (swbResponse.components != null) {
+                        swbResponse.components.entrySet().stream().limit(1).forEach(entry -> {
+                            ProjectModel.Project p = new ProjectModel.Project();
+                            p.setId(entry.getKey());
+                            p.setTitle(entry.getValue().componentName);
+                            p.setDescription(entry.getValue().componentDescription);
+                            p.setIcon("res:ic_mtrl_component");
+                            p.setCategory("Component");
+                            combined.add(p);
+                        });
+                    }
+
+                    // Add some blocks (top 1)
+                    if (swbResponse.blocks != null) {
+                        swbResponse.blocks.entrySet().stream().limit(1).forEach(entry -> {
+                            ProjectModel.Project p = new ProjectModel.Project();
+                            p.setId(entry.getKey());
+                            p.setTitle(entry.getValue().blockName);
+                            p.setDescription(entry.getValue().blockDescription);
+                            p.setIcon("res:ic_mtrl_block");
+                            p.setCategory("Block");
+                            combined.add(p);
+                        });
+                    }
+
+                    ProjectModel model = new ProjectModel();
+                    model.setStatus("success");
+                    model.setProjects(combined);
+                    consumer.accept(model);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse response", e);
+                    consumer.accept(null);
+                }
+            } else {
+                consumer.accept(null);
+            }
         });
     }
 

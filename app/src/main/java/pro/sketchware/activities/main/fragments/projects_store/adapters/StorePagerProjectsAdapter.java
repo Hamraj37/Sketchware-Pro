@@ -47,9 +47,19 @@ public class StorePagerProjectsAdapter extends RecyclerView.Adapter<StorePagerPr
         holder.binding.projectTitle.setText(project.getTitle());
         holder.binding.projectDesc.setText(project.getDescription());
         loadImageFromUrl(holder.binding.projectImage, project.getIcon());
-        loadImageFromUrl(holder.binding.screenshot1, project.getScreenshot1());
-        loadImageFromUrl(holder.binding.screenshot2, project.getScreenshot2());
-        loadImageFromUrl(holder.binding.screenshot3, project.getScreenshot3());
+
+        if (project.getCategory() != null && (project.getCategory().equals("Block") || project.getCategory().equals("Component"))) {
+            holder.binding.screenshot1Card.setVisibility(android.view.View.GONE);
+            holder.binding.screenshot2Card.setVisibility(android.view.View.GONE);
+            holder.binding.screenshot3Card.setVisibility(android.view.View.GONE);
+        } else {
+            holder.binding.screenshot1Card.setVisibility(android.view.View.VISIBLE);
+            holder.binding.screenshot2Card.setVisibility(android.view.View.VISIBLE);
+            holder.binding.screenshot3Card.setVisibility(android.view.View.VISIBLE);
+            loadImageFromUrl(holder.binding.screenshot1, project.getScreenshot1());
+            loadImageFromUrl(holder.binding.screenshot2, project.getScreenshot2());
+            loadImageFromUrl(holder.binding.screenshot3, project.getScreenshot3());
+        }
 
         holder.itemView.setScaleX(1f);
         holder.itemView.setScaleY(1f);
