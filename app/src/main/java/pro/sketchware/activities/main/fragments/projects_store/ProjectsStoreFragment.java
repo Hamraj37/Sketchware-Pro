@@ -54,8 +54,6 @@ public class ProjectsStoreFragment extends Fragment {
         UI.addSystemWindowInsetToPadding(binding.editorsChoiceProjectsRecyclerView, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.textRecent, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.recentProjectsRecyclerView, true, false, true, false);
-        UI.addSystemWindowInsetToPadding(binding.textMostDownloaded, true, false, true, false);
-        UI.addSystemWindowInsetToPadding(binding.mostDownloadedProjectsRecyclerView, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.textComponents, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.componentsRecyclerView, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.textBlocks, true, false, true, false);
@@ -93,11 +91,6 @@ public class ProjectsStoreFragment extends Fragment {
         swbHubAPI.getEditorsChoicerProjects(projectModel -> {
             if (projectModel != null) {
                 binding.editorsChoiceProjectsRecyclerView.setAdapter(new StorePagerProjectsAdapter(projectModel.getProjects(), activity));
-            }
-        });
-        swbHubAPI.getMostDownloadedProjects(projectModel -> {
-            if (projectModel != null) {
-                binding.mostDownloadedProjectsRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
             }
         });
         swbHubAPI.getRecentProjects(projectModel -> {

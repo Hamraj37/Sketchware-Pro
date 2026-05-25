@@ -74,35 +74,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:padding="16dp"
-            android:text="New &amp; Updated"
+            android:text="Recent Projects"
             android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
             android:textSize="20sp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recentProjectsRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:nestedScrollingEnabled="false"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:transitionGroup="true"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:itemCount="10"
-            tools:listitem="@layout/view_store_project_item" />
-
-        <TextView
-            android:id="@+id/text_most_downloaded"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:padding="16dp"
-            android:text="Most downloaded projects"
-            android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
-            android:textSize="20sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/mostDownloadedProjectsRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
