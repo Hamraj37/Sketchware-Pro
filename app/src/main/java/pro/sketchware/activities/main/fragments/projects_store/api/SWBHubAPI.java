@@ -11,7 +11,7 @@ import pro.sketchware.utility.Network;
 
 public class SWBHubAPI {
     private static final String TAG = "SWBHubAPI";
-    private static final String BASE_URL = "https://raw.githubusercontent.com/Hamraj37/SWBHUB-Storage/main/swbhub.json";
+    private static final String BASE_URL = "https://swbstore-data-default-rtdb.firebaseio.com/.json";
     private final Network network = new Network();
     private final Gson gson = new Gson();
 
