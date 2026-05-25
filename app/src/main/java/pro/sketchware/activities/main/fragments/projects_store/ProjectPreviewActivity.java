@@ -1,8 +1,11 @@
 package pro.sketchware.activities.main.fragments.projects_store;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.LinearLayout;
@@ -73,7 +76,7 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         binding.filesize.setText("Size: " + project.getProjectSize());
         binding.timestamp.setText("Released: " + DateFormat.getDateInstance().format(new Date(Long.parseLong(project.getPublishedTimestamp()))));
         binding.btnComments.setOnClickListener(v -> openCommentsSheet());
-        binding.btnDownload.setOnClickListener(v -> SketchwareUtil.toastError("Downloading projects is unavailable right now!"));
+        binding.btnDownload.setOnClickListener(v -> downloadFile());
         binding.btnOpenIn.setOnClickListener(v -> openProject());
         binding.btnBack.setOnClickListener(v -> finish());
 
@@ -162,5 +165,43 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(url));
         startActivity(intent);
+    }
+
+    private void downloadFile() {
+        String url = project.getDemoLink();
+        if (url == null || url.isEmpty() || !url.startsWith("http")) {
+            SketchwareUtil.toastError("Invalid download URL");
+            return;
+        }
+
+        String fileName = project.getTitle();
+        String extension = "";
+        if (url.endsWith(".swb")) {
+            extension = ".swb";
+        } else if (url.endsWith(".json")) {
+            extension = ".json";
+        } else if (url.contains(".swb")) {
+            extension = ".swb";
+        } else if (url.contains(".json")) {
+            extension = ".json";
+        }
+
+        if (!fileName.endsWith(extension)) {
+            fileName += extension;
+        }
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+        request.setTitle("Downloading " + project.getTitle());
+        request.setDescription("SWB Hub");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+
+        DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (downloadManager != null) {
+            downloadManager.enqueue(request);
+            SketchwareUtil.toast("Download started...");
+        } else {
+            SketchwareUtil.toastError("Download Manager not available");
+        }
     }
 }
