@@ -283,6 +283,10 @@
             android:configChanges="orientation|screenSize"
             android:theme="@style/Theme.SketchwarePro.ProjectPreview" />
 
+        <activity
+            android:name="pro.sketchware.activities.main.fragments.projects_store.StoreListActivity"
+            android:configChanges="orientation|screenSize" />
+
         <activity android:name="pro.sketchware.activities.settings.SettingsActivity" />
 
         <activity android:name="pro.sketchware.activities.resourceseditor.ResourcesEditorActivity" />

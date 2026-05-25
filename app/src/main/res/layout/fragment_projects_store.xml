@@ -45,15 +45,21 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/text_editors_choice"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:padding="16dp"
-            android:text="Editor\'s Choice"
-            android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
-            android:textSize="20sp" />
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:id="@+id/text_editors_choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="Editor\'s Choice"
+                android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
+                android:textSize="20sp" />
+        </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/editorsChoiceProjectsRecyclerView"
@@ -68,15 +74,31 @@
             tools:itemCount="10"
             tools:listitem="@layout/view_store_project_pager_item" />
 
-        <TextView
-            android:id="@+id/text_recent"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:padding="16dp"
-            android:text="Recent Projects"
-            android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
-            android:textSize="20sp" />
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:id="@+id/text_recent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="Recent Projects"
+                android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
+                android:textSize="20sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_see_all_recent"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="@string/common_word_see_all"
+                android:textColor="?attr/colorPrimary" />
+        </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recentProjectsRecyclerView"
@@ -91,15 +113,31 @@
             tools:itemCount="10"
             tools:listitem="@layout/view_store_project_item" />
 
-        <TextView
-            android:id="@+id/text_components"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:padding="16dp"
-            android:text="Recent Components"
-            android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
-            android:textSize="20sp" />
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:id="@+id/text_components"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="Recent Components"
+                android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
+                android:textSize="20sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_see_all_components"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="@string/common_word_see_all"
+                android:textColor="?attr/colorPrimary" />
+        </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/componentsRecyclerView"
@@ -114,15 +152,31 @@
             tools:itemCount="10"
             tools:listitem="@layout/view_store_project_item" />
 
-        <TextView
-            android:id="@+id/text_blocks"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:padding="16dp"
-            android:text="Recent Blocks"
-            android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
-            android:textSize="20sp" />
+            android:paddingHorizontal="16dp">
+
+            <TextView
+                android:id="@+id/text_blocks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="Recent Blocks"
+                android:textAppearance="?attr/textAppearanceTitleMediumEmphasized"
+                android:textSize="20sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_see_all_blocks"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="@string/common_word_see_all"
+                android:textColor="?attr/colorPrimary" />
+        </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/blocksRecyclerView"

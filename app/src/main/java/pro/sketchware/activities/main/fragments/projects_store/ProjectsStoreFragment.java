@@ -1,5 +1,6 @@
 package pro.sketchware.activities.main.fragments.projects_store;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,6 +50,10 @@ public class ProjectsStoreFragment extends Fragment {
 
         setupRecyclerView(binding.editorsChoiceProjectsRecyclerView);
         fetchData();
+
+        binding.btnSeeAllRecent.setOnClickListener(v -> openStoreList(StoreListActivity.TYPE_PROJECTS));
+        binding.btnSeeAllComponents.setOnClickListener(v -> openStoreList(StoreListActivity.TYPE_COMPONENTS));
+        binding.btnSeeAllBlocks.setOnClickListener(v -> openStoreList(StoreListActivity.TYPE_BLOCKS));
 
         UI.addSystemWindowInsetToPadding(binding.textEditorsChoice, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.editorsChoiceProjectsRecyclerView, true, false, true, false);
@@ -108,5 +113,11 @@ public class ProjectsStoreFragment extends Fragment {
                 binding.blocksRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
             }
         });
+    }
+
+    private void openStoreList(int type) {
+        Intent intent = new Intent(getContext(), StoreListActivity.class);
+        intent.putExtra(StoreListActivity.EXTRA_TYPE, type);
+        startActivity(intent);
     }
 }
