@@ -2,6 +2,8 @@ package pro.sketchware.activities.main.fragments.projects_store;
 
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -119,6 +121,9 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
             binding.filesize.setText("Size: " + size);
         }
 
+        binding.cardDescription.setOnClickListener(v -> copyToClipboard(project.getDescription()));
+        binding.cardWhatIsNew.setOnClickListener(v -> copyToClipboard(project.getWhatsnew()));
+
         String timestamp = project.getPublishedTimestamp();
         if (timestamp != null && !timestamp.isEmpty() && !timestamp.equals("null")) {
             try {
@@ -220,6 +225,14 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(url));
         startActivity(intent);
+    }
+
+    private void copyToClipboard(String text) {
+        if (text == null || text.isEmpty()) return;
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("description", text);
+        clipboard.setPrimaryClip(clip);
+        SketchwareUtil.toast("Copied to clipboard");
     }
 
     private void downloadFile() {
