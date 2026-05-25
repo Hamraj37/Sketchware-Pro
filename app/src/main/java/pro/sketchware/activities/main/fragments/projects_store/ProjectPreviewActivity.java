@@ -155,8 +155,12 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
     }
 
     private void openProject() {
+        String url = project.getDemoLink();
+        if (url == null || url.isEmpty() || !url.startsWith("http")) {
+            url = "https://web.sketchub.in/p/" + project.getId();
+        }
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://web.sketchub.in/p/" + project.getId()));
+        intent.setData(Uri.parse(url));
         startActivity(intent);
     }
 }

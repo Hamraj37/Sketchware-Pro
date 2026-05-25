@@ -18,14 +18,14 @@ import com.google.android.material.transition.MaterialFadeThrough;
 import pro.sketchware.BuildConfig;
 import pro.sketchware.activities.main.fragments.projects_store.adapters.StorePagerProjectsAdapter;
 import pro.sketchware.activities.main.fragments.projects_store.adapters.StoreProjectsAdapter;
-import pro.sketchware.activities.main.fragments.projects_store.api.SketchubAPI;
+import pro.sketchware.activities.main.fragments.projects_store.api.SWBHubAPI;
 import pro.sketchware.activities.main.fragments.projects_store.classes.CenterZoomListener;
 import pro.sketchware.databinding.FragmentProjectsStoreBinding;
 import pro.sketchware.utility.UI;
 
 public class ProjectsStoreFragment extends Fragment {
     private FragmentProjectsStoreBinding binding;
-    private SketchubAPI sketchubAPI;
+    private SWBHubAPI swbHubAPI;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -39,7 +39,7 @@ public class ProjectsStoreFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentProjectsStoreBinding.inflate(inflater, container, false);
-        sketchubAPI = new SketchubAPI(BuildConfig.SKETCHUB_API_KEY);
+        swbHubAPI = new SWBHubAPI();
         return binding.getRoot();
     }
 
@@ -55,7 +55,11 @@ public class ProjectsStoreFragment extends Fragment {
         UI.addSystemWindowInsetToPadding(binding.textRecent, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.recentProjectsRecyclerView, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.textMostDownloaded, true, false, true, false);
-        UI.addSystemWindowInsetToPadding(binding.mostDownloadedProjectsRecyclerView, true, false, true, true);
+        UI.addSystemWindowInsetToPadding(binding.mostDownloadedProjectsRecyclerView, true, false, true, false);
+        UI.addSystemWindowInsetToPadding(binding.textComponents, true, false, true, false);
+        UI.addSystemWindowInsetToPadding(binding.componentsRecyclerView, true, false, true, false);
+        UI.addSystemWindowInsetToPadding(binding.textBlocks, true, false, true, false);
+        UI.addSystemWindowInsetToPadding(binding.blocksRecyclerView, true, false, true, true);
         UI.addSystemWindowInsetToMargin(binding.cardWarning, true, false, true, false);
     }
 
@@ -86,19 +90,29 @@ public class ProjectsStoreFragment extends Fragment {
 
     private void fetchData() {
         var activity = getActivity();
-        sketchubAPI.getEditorsChoicerProjects(1, projectModel -> {
+        swbHubAPI.getEditorsChoicerProjects(projectModel -> {
             if (projectModel != null) {
                 binding.editorsChoiceProjectsRecyclerView.setAdapter(new StorePagerProjectsAdapter(projectModel.getProjects(), activity));
             }
         });
-        sketchubAPI.getMostDownloadedProjects(1, projectModel -> {
+        swbHubAPI.getMostDownloadedProjects(projectModel -> {
             if (projectModel != null) {
                 binding.mostDownloadedProjectsRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
             }
         });
-        sketchubAPI.getRecentProjects(1, projectModel -> {
+        swbHubAPI.getRecentProjects(projectModel -> {
             if (projectModel != null) {
                 binding.recentProjectsRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
+            }
+        });
+        swbHubAPI.getRecentComponents(projectModel -> {
+            if (projectModel != null) {
+                binding.componentsRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
+            }
+        });
+        swbHubAPI.getRecentBlocks(projectModel -> {
+            if (projectModel != null) {
+                binding.blocksRecyclerView.setAdapter(new StoreProjectsAdapter(projectModel.getProjects(), activity));
             }
         });
     }

@@ -48,6 +48,7 @@ import mod.tyron.backup.SingleCopyTask;
 import pro.sketchware.R;
 import pro.sketchware.activities.about.AboutActivity;
 import pro.sketchware.activities.main.fragments.projects.ProjectsFragment;
+import pro.sketchware.activities.main.fragments.projects_store.ProjectsStoreFragment;
 import pro.sketchware.databinding.MainBinding;
 import pro.sketchware.lib.base.BottomSheetDialogView;
 import pro.sketchware.utility.DataResetter;
@@ -57,6 +58,7 @@ import pro.sketchware.utility.UI;
 
 public class MainActivity extends BasePermissionAppCompatActivity {
     private static final String PROJECTS_FRAGMENT_TAG = "projects_fragment";
+    private static final String STORE_FRAGMENT_TAG = "store_fragment";
     private ActionBarDrawerToggle drawerToggle;
     private DB u;
     private Snackbar storageAccessDenied;
@@ -68,7 +70,14 @@ public class MainActivity extends BasePermissionAppCompatActivity {
             binding.drawerLayout.closeDrawers();
         }
     };
+    private final OnBackPressedCallback backToProjects = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            binding.bottomNav.setSelectedItemId(R.id.item_projects);
+        }
+    };
     private ProjectsFragment projectsFragment;
+    private ProjectsStoreFragment storeFragment;
     private Fragment activeFragment;
     @IdRes
     private int currentNavItemId = R.id.item_projects;
@@ -160,6 +169,8 @@ public class MainActivity extends BasePermissionAppCompatActivity {
 
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
+
+        getOnBackPressedDispatcher().addCallback(this, backToProjects);
 
         binding.statusBarOverlapper.setMinimumHeight(UI.getStatusBarHeight(this));
         UI.addSystemWindowInsetToPadding(binding.appbar, true, false, true, false);
@@ -270,16 +281,22 @@ public class MainActivity extends BasePermissionAppCompatActivity {
             if (id == R.id.item_projects) {
                 navigateToProjectsFragment();
                 return true;
+            } else if (id == R.id.item_swb_hub) {
+                navigateToStoreFragment();
+                return true;
             }
             return false;
         });
 
         if (savedInstanceState != null) {
             projectsFragment = (ProjectsFragment) getSupportFragmentManager().findFragmentByTag(PROJECTS_FRAGMENT_TAG);
+            storeFragment = (ProjectsStoreFragment) getSupportFragmentManager().findFragmentByTag(STORE_FRAGMENT_TAG);
             currentNavItemId = savedInstanceState.getInt("selected_tab_id");
             Fragment current = getFragmentForNavId(currentNavItemId);
             if (current instanceof ProjectsFragment) {
                 navigateToProjectsFragment();
+            } else if (current instanceof ProjectsStoreFragment) {
+                navigateToStoreFragment();
             }
 
             return;
@@ -291,6 +308,8 @@ public class MainActivity extends BasePermissionAppCompatActivity {
     private Fragment getFragmentForNavId(int navItemId) {
         if (navItemId == R.id.item_projects) {
             return projectsFragment;
+        } else if (navItemId == R.id.item_swb_hub) {
+            return storeFragment;
         }
         throw new IllegalArgumentException();
     }
@@ -310,6 +329,7 @@ public class MainActivity extends BasePermissionAppCompatActivity {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction transaction = fm.beginTransaction();
 
+        binding.toolbarTitle.setText("Search for projects...");
         binding.createNewProject.show();
         if (activeFragment != null) transaction.hide(activeFragment);
         if (fm.findFragmentByTag(PROJECTS_FRAGMENT_TAG) == null) {
@@ -321,6 +341,31 @@ public class MainActivity extends BasePermissionAppCompatActivity {
 
         activeFragment = projectsFragment;
         currentNavItemId = R.id.item_projects;
+        backToProjects.setEnabled(false);
+    }
+
+    private void navigateToStoreFragment() {
+        if (storeFragment == null) {
+            storeFragment = new ProjectsStoreFragment();
+        }
+
+        boolean shouldShow = true;
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction transaction = fm.beginTransaction();
+
+        binding.toolbarTitle.setText(R.string.social_swbhub);
+        binding.createNewProject.hide();
+        if (activeFragment != null) transaction.hide(activeFragment);
+        if (fm.findFragmentByTag(STORE_FRAGMENT_TAG) == null) {
+            shouldShow = false;
+            transaction.add(binding.container.getId(), storeFragment, STORE_FRAGMENT_TAG);
+        }
+        if (shouldShow) transaction.show(storeFragment);
+        transaction.commit();
+
+        activeFragment = storeFragment;
+        currentNavItemId = R.id.item_swb_hub;
+        backToProjects.setEnabled(true);
     }
 
     @NonNull
