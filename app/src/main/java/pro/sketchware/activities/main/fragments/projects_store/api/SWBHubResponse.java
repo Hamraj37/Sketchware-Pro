@@ -23,6 +23,11 @@ public class SWBHubResponse {
         public String userId;
         public String userName;
         public int downloads;
+        public String screenshot1;
+        public String screenshot2;
+        public String screenshot3;
+        public String screenshot4;
+        public String screenshot5;
     }
 
     public static class SWBHubComponent {

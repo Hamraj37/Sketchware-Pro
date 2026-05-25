@@ -35,6 +35,7 @@ public class SWBHubAPI {
                             p.setDescription(entry.getValue().componentDescription);
                             p.setIcon("res:ic_mtrl_component");
                             p.setCategory("Component");
+                            p.setScreenshot1(entry.getValue().logoUrl); // Use logo as fallback for screenshot
                             combined.add(p);
                         });
                     }
@@ -48,6 +49,7 @@ public class SWBHubAPI {
                             p.setDescription(entry.getValue().blockDescription);
                             p.setIcon("res:ic_mtrl_block");
                             p.setCategory("Block");
+                            p.setScreenshot1(entry.getValue().profilePicUrl); // Use profile as fallback
                             combined.add(p);
                         });
                     }
@@ -216,6 +218,11 @@ public class SWBHubAPI {
                 p.setTimestamp(String.valueOf(swbProject.timestamp));
                 p.setPublishedTimestamp(String.valueOf(swbProject.timestamp));
                 p.setDemoLink(swbProject.swbUrl); // Store SWB URL in demoLink for now
+                p.setScreenshot1(swbProject.screenshot1);
+                p.setScreenshot2(swbProject.screenshot2);
+                p.setScreenshot3(swbProject.screenshot3);
+                p.setScreenshot4(swbProject.screenshot4);
+                p.setScreenshot5(swbProject.screenshot5);
                 p.setIsEditorChoice("0");
                 p.setIsVerified("1");
                 p.setCategory("SWB Hub");
