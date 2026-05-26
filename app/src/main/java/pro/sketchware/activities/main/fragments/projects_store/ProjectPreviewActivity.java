@@ -464,14 +464,87 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
                         }
                     }
 
-                    if (path != null && path.toLowerCase().endsWith(".swb")) {
-                        SketchwareUtil.toast("Download complete, restoring project...");
-                        new BackupRestoreManager(this).doRestore(path, true);
+                    if (path != null) {
+                        String lowerPath = path.toLowerCase();
+                        if (lowerPath.endsWith(".swb")) {
+                            SketchwareUtil.toast("Download complete, restoring project...");
+                            new BackupRestoreManager(this).doRestore(path, true);
+                        } else if (lowerPath.endsWith(".json")) {
+                            importJsonFile(path);
+                        }
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void importJsonFile(String path) {
+        String category = project.getCategory();
+        if (category == null) return;
+
+        if (category.equalsIgnoreCase("Component")) {
+            importComponent(path);
+        } else if (category.equalsIgnoreCase("Block")) {
+            importBlock(path);
+        }
+    }
+
+    private void importComponent(String path) {
+        var readResult = mod.hilal.saif.components.ComponentsHandler.readComponents(path);
+        if (readResult.first.isPresent()) {
+            SketchwareUtil.toastError("Failed to read component: " + readResult.first.get());
+            return;
+        }
+
+        java.util.List<java.util.HashMap<String, Object>> components = readResult.second;
+        if (components.isEmpty()) return;
+
+        String componentDir = a.a.a.wq.getCustomComponent();
+        String content = FileUtil.readFile(componentDir);
+        java.util.List<java.util.HashMap<String, Object>> originalComponentsList;
+        if (content.isEmpty()) {
+            originalComponentsList = new java.util.ArrayList<>();
+        } else {
+            originalComponentsList = new com.google.gson.Gson().fromJson(content, 
+                new com.google.gson.reflect.TypeToken<java.util.List<java.util.HashMap<String, Object>>>(){}.getType());
+        }
+
+        for (java.util.HashMap<String, Object> component : components) {
+            if (mod.hilal.saif.components.ComponentsHandler.isValidComponent(component)) {
+                originalComponentsList.add(component);
+            }
+        }
+
+        FileUtil.writeFile(componentDir, new com.google.gson.Gson().toJson(originalComponentsList));
+        SketchwareUtil.toast("Component imported successfully");
+    }
+
+    private void importBlock(String path) {
+        String content = FileUtil.readFile(path);
+        if (content.isEmpty()) return;
+
+        try {
+            com.google.gson.Gson gson = new com.google.gson.Gson();
+            java.util.HashMap<String, Object> blockMap = gson.fromJson(content, 
+                new com.google.gson.reflect.TypeToken<java.util.HashMap<String, Object>>(){}.getType());
+            
+            String blocksDir = a.a.a.wq.getAbsolutePathOf(".sketchware/data/block/custom_blocks");
+            String originalBlocksContent = FileUtil.readFile(blocksDir);
+            java.util.List<java.util.HashMap<String, Object>> allBlocksList;
+            if (originalBlocksContent.isEmpty()) {
+                allBlocksList = new java.util.ArrayList<>();
+            } else {
+                allBlocksList = gson.fromJson(originalBlocksContent, 
+                    new com.google.gson.reflect.TypeToken<java.util.List<java.util.HashMap<String, Object>>>(){}.getType());
+            }
+
+            allBlocksList.add(blockMap);
+            FileUtil.writeFile(blocksDir, gson.toJson(allBlocksList));
+            SketchwareUtil.toast("Block imported successfully");
+        } catch (Exception e) {
+            SketchwareUtil.toastError("Failed to import block: " + e.getMessage());
         }
     }
 }
