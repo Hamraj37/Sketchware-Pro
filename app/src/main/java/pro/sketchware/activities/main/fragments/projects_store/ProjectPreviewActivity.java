@@ -214,7 +214,11 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
     }
 
     private void openCommentsSheet() {
+        Bundle bundle = new Bundle();
+        bundle.putString("project_id", project.getId());
+        bundle.putString("project_json", new Gson().toJson(project));
         CommentsBottomSheet sheet = new CommentsBottomSheet();
+        sheet.setArguments(bundle);
         sheet.show(getSupportFragmentManager(), /* tag= */ CommentsBottomSheet.class.getSimpleName());
     }
 
@@ -315,6 +319,36 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
                             project.setDescription(fetchedDesc);
                             binding.description.setText(fetchedDesc);
                         });
+                    }
+                }
+
+                // parse comments from metadata if they exist
+                Object commentsObj = data.get("comments");
+                if (commentsObj instanceof java.util.Map) {
+                    java.util.Map<?, ?> commentsMap = (java.util.Map<?, ?>) commentsObj;
+                    ArrayList<ProjectModel.Comment> metaComments = new ArrayList<>();
+                    commentsMap.forEach((id, val) -> {
+                        if (val instanceof java.util.Map) {
+                            java.util.Map<?, ?> cMap = (java.util.Map<?, ?>) val;
+                            ProjectModel.Comment c = new ProjectModel.Comment();
+                            c.setId(String.valueOf(id));
+                            
+                            Object commentText = cMap.get("comment");
+                            if (commentText == null) commentText = cMap.get("text");
+                            c.setComment(String.valueOf(commentText));
+                            
+                            c.setUserName(String.valueOf(cMap.get("userName")));
+                            
+                            Object profilePic = cMap.get("profilePicUrl");
+                            if (profilePic == null) profilePic = cMap.get("photoURL");
+                            c.setUserProfilePic(String.valueOf(profilePic));
+
+                            c.setTimestamp(String.valueOf(cMap.get("timestamp")));
+                            metaComments.add(c);
+                        }
+                    });
+                    if (!metaComments.isEmpty()) {
+                        project.setCommentsList(metaComments);
                     }
                 }
 

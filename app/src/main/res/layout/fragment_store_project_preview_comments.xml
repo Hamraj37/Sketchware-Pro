@@ -25,6 +25,15 @@
         android:layout_height="wrap_content"
         app:dividerColor="?attr/colorSurfaceContainerHighest" />
 
+    <TextView
+        android:id="@+id/no_comments_text"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:gravity="center"
+        android:text="No comments to display"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"

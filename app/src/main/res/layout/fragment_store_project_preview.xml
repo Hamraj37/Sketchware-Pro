@@ -336,7 +336,7 @@
             android:layout_marginTop="12dp"
             android:layout_marginEnd="12dp"
             android:text="Comments"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintEnd_toStartOf="@id/btn_download"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

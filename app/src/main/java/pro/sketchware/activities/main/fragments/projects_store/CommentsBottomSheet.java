@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import pro.sketchware.activities.main.fragments.projects_store.adapters.CommentsAdapter;
+import pro.sketchware.activities.main.fragments.projects_store.api.ProjectModel;
 import pro.sketchware.databinding.FragmentStoreProjectPreviewCommentsBinding;
 
 public class CommentsBottomSheet extends BottomSheetDialogFragment {
@@ -30,6 +31,35 @@ public class CommentsBottomSheet extends BottomSheetDialogFragment {
 
         adapter = new CommentsAdapter();
         binding.recyclerView.setAdapter(adapter);
+
+        String projectId = getArguments() != null ? getArguments().getString("project_id") : null;
+        String projectJson = getArguments() != null ? getArguments().getString("project_json") : null;
+
+        if (projectJson != null) {
+            ProjectModel.Project project = new com.google.gson.Gson().fromJson(projectJson, ProjectModel.Project.class);
+            if (project.getCommentsList() != null && !project.getCommentsList().isEmpty()) {
+                adapter.setComments(project.getCommentsList());
+                binding.noCommentsText.setVisibility(View.GONE);
+                binding.recyclerView.setVisibility(View.VISIBLE);
+            }
+        }
+
+        if (projectId != null) {
+            new pro.sketchware.activities.main.fragments.projects_store.api.SWBHubAPI().getComments(projectId, comments -> {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (comments.isEmpty()) {
+                            binding.noCommentsText.setVisibility(View.VISIBLE);
+                            binding.recyclerView.setVisibility(View.GONE);
+                        } else {
+                            binding.noCommentsText.setVisibility(View.GONE);
+                            binding.recyclerView.setVisibility(View.VISIBLE);
+                            adapter.setComments(comments);
+                        }
+                    });
+                }
+            });
+        }
 
         binding.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override

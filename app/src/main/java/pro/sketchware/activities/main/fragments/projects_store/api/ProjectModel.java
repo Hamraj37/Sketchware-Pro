@@ -42,9 +42,62 @@ public class ProjectModel {
         this.projects = projects;
     }
 
-    // not supported right now due of API requirements
     public static class Comment {
+        @SerializedName("id")
+        @Expose
+        private String id;
+        @SerializedName("user_name")
+        @Expose
+        private String userName;
+        @SerializedName("user_profile_pic")
+        @Expose
+        private String userProfilePic;
+        @SerializedName("comment")
+        @Expose
+        private String comment;
+        @SerializedName("timestamp")
+        @Expose
+        private String timestamp;
 
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName = userName;
+        }
+
+        public String getUserProfilePic() {
+            return userProfilePic;
+        }
+
+        public void setUserProfilePic(String userProfilePic) {
+            this.userProfilePic = userProfilePic;
+        }
+
+        public String getComment() {
+            return comment;
+        }
+
+        public void setComment(String comment) {
+            this.comment = comment;
+        }
+
+        public String getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(String timestamp) {
+            this.timestamp = timestamp;
+        }
     }
 
     public static class Project {
@@ -128,12 +181,22 @@ public class ProjectModel {
         @Expose
         private String userBadge;
 
+        private List<Comment> commentsList;
+
         public String getId() {
             return id;
         }
 
         public void setId(String id) {
             this.id = id;
+        }
+
+        public List<Comment> getCommentsList() {
+            return commentsList;
+        }
+
+        public void setCommentsList(List<Comment> commentsList) {
+            this.commentsList = commentsList;
         }
 
         public String getTitle() {

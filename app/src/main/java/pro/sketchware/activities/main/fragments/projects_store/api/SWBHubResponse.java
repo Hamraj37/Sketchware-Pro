@@ -10,6 +10,18 @@ public class SWBHubResponse {
     public Map<String, SWBHubComponent> components;
     @SerializedName("blocks")
     public Map<String, SWBHubBlock> blocks;
+    @SerializedName("comments")
+    public Map<String, Map<String, SWBHubComment>> comments;
+
+    public static class SWBHubComment {
+        public String comment;
+        public String text;
+        public String userId;
+        public String userName;
+        public String profilePicUrl;
+        public String photoURL;
+        public long timestamp;
+    }
 
     public static class SWBHubProject {
         public String customUid;
@@ -26,6 +38,8 @@ public class SWBHubResponse {
         public String projectSize;
         @SerializedName("screenshotUrls")
         public Map<String, String> screenshotUrls;
+        @SerializedName("comments")
+        public Map<String, SWBHubComment> comments;
     }
 
     public static class SWBHubComponent {
@@ -41,6 +55,8 @@ public class SWBHubResponse {
         public String projectSize;
         @SerializedName("screenshotUrls")
         public Map<String, String> screenshotUrls;
+        @SerializedName("comments")
+        public Map<String, SWBHubComment> comments;
     }
 
     public static class SWBHubBlock {
@@ -55,5 +71,7 @@ public class SWBHubResponse {
         public String projectSize;
         @SerializedName("screenshotUrls")
         public Map<String, String> screenshotUrls;
+        @SerializedName("comments")
+        public Map<String, SWBHubComment> comments;
     }
 }

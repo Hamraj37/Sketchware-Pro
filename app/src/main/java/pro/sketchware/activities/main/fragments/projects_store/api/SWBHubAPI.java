@@ -335,6 +335,66 @@ public class SWBHubAPI {
         });
     }
 
+    public void getComments(String projectId, Consumer<List<ProjectModel.Comment>> consumer) {
+        network.get(BASE_URL, response -> {
+            if (response != null && !response.isEmpty()) {
+                try {
+                    SWBHubResponse swbResponse = gson.fromJson(response, SWBHubResponse.class);
+                    List<ProjectModel.Comment> comments = new ArrayList<>();
+                    
+                    // 1. Check top-level comments map
+                    if (swbResponse.comments != null && swbResponse.comments.containsKey(projectId)) {
+                        Map<String, SWBHubResponse.SWBHubComment> projectComments = swbResponse.comments.get(projectId);
+                        if (projectComments != null) {
+                            projectComments.forEach((id, swbComment) -> comments.add(mapComment(id, swbComment)));
+                        }
+                    }
+                    
+                    // 2. Check nested comments in projects
+                    if (comments.isEmpty() && swbResponse.projects != null && swbResponse.projects.containsKey(projectId)) {
+                        SWBHubResponse.SWBHubProject project = swbResponse.projects.get(projectId);
+                        if (project != null && project.comments != null) {
+                            project.comments.forEach((id, swbComment) -> comments.add(mapComment(id, swbComment)));
+                        }
+                    }
+                    
+                    // 3. Check nested comments in components
+                    if (comments.isEmpty() && swbResponse.components != null && swbResponse.components.containsKey(projectId)) {
+                        SWBHubResponse.SWBHubComponent component = swbResponse.components.get(projectId);
+                        if (component != null && component.comments != null) {
+                            component.comments.forEach((id, swbComment) -> comments.add(mapComment(id, swbComment)));
+                        }
+                    }
+                    
+                    // 4. Check nested comments in blocks
+                    if (comments.isEmpty() && swbResponse.blocks != null && swbResponse.blocks.containsKey(projectId)) {
+                        SWBHubResponse.SWBHubBlock block = swbResponse.blocks.get(projectId);
+                        if (block != null && block.comments != null) {
+                            block.comments.forEach((id, swbComment) -> comments.add(mapComment(id, swbComment)));
+                        }
+                    }
+
+                    consumer.accept(comments);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse response", e);
+                    consumer.accept(new ArrayList<>());
+                }
+            } else {
+                consumer.accept(new ArrayList<>());
+            }
+        });
+    }
+
+    private ProjectModel.Comment mapComment(String id, SWBHubResponse.SWBHubComment swbComment) {
+        ProjectModel.Comment c = new ProjectModel.Comment();
+        c.setId(id);
+        c.setComment(swbComment.comment != null ? swbComment.comment : swbComment.text);
+        c.setUserName(swbComment.userName);
+        c.setUserProfilePic(swbComment.profilePicUrl != null ? swbComment.profilePicUrl : swbComment.photoURL);
+        c.setTimestamp(String.valueOf(swbComment.timestamp));
+        return c;
+    }
+
     private void getProjects(Consumer<List<ProjectModel.Project>> consumer) {
         network.get(BASE_URL, response -> {
             if (response != null && !response.isEmpty()) {

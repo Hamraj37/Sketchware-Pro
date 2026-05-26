@@ -26,6 +26,9 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull CommentsAdapter.ViewHolder holder, int position) {
         ProjectModel.Comment comment = comments.get(position);
+        holder.binding.userName.setText(comment.getUserName());
+        holder.binding.userComment.setText(comment.getComment());
+        pro.sketchware.utility.UI.loadImageFromUrl(holder.binding.userAvatar, comment.getUserProfilePic());
     }
 
     @Override
@@ -33,10 +36,18 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         return comments.size();
     }
 
+    public void setComments(List<ProjectModel.Comment> comments) {
+        this.comments.clear();
+        this.comments.addAll(comments);
+        notifyDataSetChanged();
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        private final ViewStoreProjectPreviewCommentBinding binding;
 
         public ViewHolder(ViewStoreProjectPreviewCommentBinding binding) {
             super(binding.getRoot());
+            this.binding = binding;
         }
     }
 
