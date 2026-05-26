@@ -17,6 +17,14 @@
         android:gravity="center_vertical"
         android:orientation="vertical">
 
+        <ImageView
+            android:id="@+id/projectBackground"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/screenshot1Card"
             android:layout_width="140dp"

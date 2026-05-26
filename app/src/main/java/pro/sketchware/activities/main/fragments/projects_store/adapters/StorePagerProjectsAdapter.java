@@ -48,9 +48,31 @@ public class StorePagerProjectsAdapter extends RecyclerView.Adapter<StorePagerPr
         holder.binding.projectDesc.setText(project.getDescription());
         loadImageFromUrl(holder.binding.projectImage, project.getIcon());
 
-        loadImageFromUrl(holder.binding.screenshot1, project.getScreenshot1());
-        loadImageFromUrl(holder.binding.screenshot2, project.getScreenshot2());
-        loadImageFromUrl(holder.binding.screenshot3, project.getScreenshot3());
+        String s1 = project.getScreenshot1();
+        String s2 = project.getScreenshot2();
+        String s3 = project.getScreenshot3();
+
+        boolean hasScreenshots = (s1 != null && !s1.isEmpty() && !s1.equals("null")) ||
+                (s2 != null && !s2.isEmpty() && !s2.equals("null")) ||
+                (s3 != null && !s3.isEmpty() && !s3.equals("null"));
+
+        if (hasScreenshots) {
+            holder.binding.projectBackground.setVisibility(android.view.View.GONE);
+            holder.binding.screenshot1Card.setVisibility(android.view.View.VISIBLE);
+            holder.binding.screenshot2Card.setVisibility(android.view.View.VISIBLE);
+            holder.binding.screenshot3Card.setVisibility(android.view.View.VISIBLE);
+
+            loadImageFromUrl(holder.binding.screenshot1, s1);
+            loadImageFromUrl(holder.binding.screenshot2, s2);
+            loadImageFromUrl(holder.binding.screenshot3, s3);
+        } else {
+            holder.binding.projectBackground.setVisibility(android.view.View.VISIBLE);
+            holder.binding.screenshot1Card.setVisibility(android.view.View.GONE);
+            holder.binding.screenshot2Card.setVisibility(android.view.View.GONE);
+            holder.binding.screenshot3Card.setVisibility(android.view.View.GONE);
+
+            loadImageFromUrl(holder.binding.projectBackground, project.getIcon());
+        }
 
         holder.itemView.setScaleX(1f);
         holder.itemView.setScaleY(1f);
