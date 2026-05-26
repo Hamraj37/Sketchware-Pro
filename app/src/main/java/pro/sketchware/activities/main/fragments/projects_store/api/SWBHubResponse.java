@@ -39,6 +39,8 @@ public class SWBHubResponse {
         public long timestamp;
         public int downloads;
         public String projectSize;
+        @SerializedName("screenshotUrls")
+        public Map<String, String> screenshotUrls;
     }
 
     public static class SWBHubBlock {
@@ -51,5 +53,7 @@ public class SWBHubResponse {
         public long timestamp;
         public int downloads;
         public String projectSize;
+        @SerializedName("screenshotUrls")
+        public Map<String, String> screenshotUrls;
     }
 }

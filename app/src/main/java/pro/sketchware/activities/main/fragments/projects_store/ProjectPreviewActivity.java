@@ -147,12 +147,24 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         ArrayList<String> screenshots = new ArrayList<>();
         for (int i = 0; i <= 4; i++) {
             String screenshot = getScreenshot(i);
-            if (screenshot != null && !screenshot.isEmpty()) {
+            if (screenshot != null && !screenshot.isEmpty() && screenshot.startsWith("http")) {
                 screenshots.add(screenshot);
             }
         }
 
-        binding.screenshots.setAdapter(new ProjectScreenshotsAdapter(screenshots));
+        if (screenshots.isEmpty()) {
+            binding.textScreenshots.setVisibility(View.GONE);
+            binding.screenshots.setVisibility(View.GONE);
+        } else {
+            binding.textScreenshots.setVisibility(View.VISIBLE);
+            binding.screenshots.setVisibility(View.VISIBLE);
+            binding.screenshots.setAdapter(new ProjectScreenshotsAdapter(screenshots));
+        }
+
+        // If it's a block or component and screenshots are missing/fallback, try fetching from dataUrl
+        if (project.getCategory() != null && (project.getCategory().equalsIgnoreCase("Block") || project.getCategory().equalsIgnoreCase("Component"))) {
+            fetchExtraMetadata();
+        }
 
         UI.loadImageFromUrl(binding.icon, project.getIcon());
         UI.addSystemWindowInsetToPadding(binding.content, true, true, true, true);
@@ -215,6 +227,101 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
             case 4 -> project.getScreenshot5();
             default -> null;
         };
+    }
+
+    private void fetchExtraMetadata() {
+        final String url = project.getDemoLink();
+        if (url == null || url.isEmpty() || !url.startsWith("http")) return;
+
+        // Robust URL cleaning for Github Raw links with spaces
+        String encodedUrl = url.trim().replace(" ", "%20");
+        android.util.Log.d("SWBHub", "fetchExtraMetadata: Fetching from " + encodedUrl);
+
+        new Network().get(encodedUrl, responseBody -> {
+            if (responseBody == null || responseBody.isEmpty()) {
+                android.util.Log.e("SWBHub", "fetchExtraMetadata: Empty response from " + encodedUrl);
+                return;
+            }
+
+            try {
+                String response = responseBody.trim();
+                // Handle UTF-8 BOM if present
+                if (response.startsWith("\ufeff")) {
+                    response = response.substring(1);
+                }
+
+                android.util.Log.d("SWBHub", "fetchExtraMetadata: Received response length: " + response.length());
+
+                Gson gson = new Gson();
+                java.util.Map<String, Object> data = gson.fromJson(response, new com.google.gson.reflect.TypeToken<java.util.Map<String, Object>>(){}.getType());
+                
+                if (data == null) return;
+
+                ArrayList<String> newScreenshots = new ArrayList<>();
+                
+                // Priority 1: standard store format map
+                if (data.get("screenshotUrls") instanceof java.util.Map) {
+                    java.util.Map<?, ?> map = (java.util.Map<?, ?>) data.get("screenshotUrls");
+                    for (int i = 0; i <= 15; i++) {
+                        Object s = map.get("screen_" + i);
+                        if (s instanceof String && !((String) s).isEmpty() && ((String) s).startsWith("http")) {
+                            newScreenshots.add((String) s);
+                        }
+                    }
+                }
+                
+                // Priority 2: direct root keys screen_0, screen_1 etc
+                if (newScreenshots.isEmpty()) {
+                    for (int i = 0; i <= 15; i++) {
+                        Object s = data.get("screen_" + i);
+                        if (s instanceof String && !((String) s).isEmpty() && ((String) s).startsWith("http")) {
+                            newScreenshots.add((String) s);
+                        }
+                    }
+                }
+                
+                // Priority 3: check for "screenshots" array/list
+                if (newScreenshots.isEmpty() && data.get("screenshots") instanceof java.util.List) {
+                    java.util.List<?> list = (java.util.List<?>) data.get("screenshots");
+                    for (Object item : list) {
+                        if (item instanceof String && !((String) item).isEmpty()) {
+                            newScreenshots.add((String) item);
+                        }
+                    }
+                }
+
+                if (!newScreenshots.isEmpty()) {
+                    android.util.Log.d("SWBHub", "fetchExtraMetadata: Found " + newScreenshots.size() + " screenshots. Updating UI.");
+                    final ArrayList<String> finalScreenshots = newScreenshots;
+                    runOnUiThread(() -> {
+                        binding.screenshots.setAdapter(new ProjectScreenshotsAdapter(finalScreenshots));
+                        binding.textScreenshots.setVisibility(View.VISIBLE);
+                        binding.screenshots.setVisibility(View.VISIBLE);
+                    });
+                } else {
+                    android.util.Log.w("SWBHub", "fetchExtraMetadata: No valid screenshots found in the fetched metadata");
+                }
+                
+                // update description if it was missing/short
+                Object descObj = data.get("description");
+                if (descObj == null) descObj = data.get("componentDescription");
+                if (descObj == null) descObj = data.get("blockDescription");
+                if (descObj == null) descObj = data.get("projectDescription");
+                
+                if (descObj instanceof String && !((String) descObj).isEmpty()) {
+                    final String fetchedDesc = (String) descObj;
+                    if (project.getDescription() == null || project.getDescription().length() < 5) {
+                        runOnUiThread(() -> {
+                            project.setDescription(fetchedDesc);
+                            binding.description.setText(fetchedDesc);
+                        });
+                    }
+                }
+
+            } catch (Exception e) {
+                android.util.Log.e("SWBHub", "fetchExtraMetadata: Exception during parsing", e);
+            }
+        });
     }
 
     private void openProject() {

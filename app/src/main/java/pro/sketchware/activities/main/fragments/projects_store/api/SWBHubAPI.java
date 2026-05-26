@@ -37,9 +37,16 @@ public class SWBHubAPI {
                             p.setDescription(val.componentDescription);
                             p.setIcon("res:ic_mtrl_component");
                             p.setCategory("Component");
-                            p.setScreenshot1(val.logoUrl); 
-                            p.setScreenshot2(val.logoUrl);
-                            p.setScreenshot3(val.logoUrl);
+                            
+                            Map<String, String> screenshots = val.screenshotUrls;
+                            if (screenshots != null && !screenshots.isEmpty()) {
+                                p.setScreenshot1(screenshots.get("screen_0"));
+                                p.setScreenshot2(screenshots.get("screen_1"));
+                                p.setScreenshot3(screenshots.get("screen_2"));
+                                p.setScreenshot4(screenshots.get("screen_3"));
+                                p.setScreenshot5(screenshots.get("screen_4"));
+                            }
+
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
@@ -62,9 +69,16 @@ public class SWBHubAPI {
                             p.setDescription(val.blockDescription);
                             p.setIcon("res:ic_mtrl_block");
                             p.setCategory("Block");
-                            p.setScreenshot1(val.profilePicUrl); 
-                            p.setScreenshot2(val.profilePicUrl);
-                            p.setScreenshot3(val.profilePicUrl);
+                            
+                            Map<String, String> screenshots = val.screenshotUrls;
+                            if (screenshots != null && !screenshots.isEmpty()) {
+                                p.setScreenshot1(screenshots.get("screen_0"));
+                                p.setScreenshot2(screenshots.get("screen_1"));
+                                p.setScreenshot3(screenshots.get("screen_2"));
+                                p.setScreenshot4(screenshots.get("screen_3"));
+                                p.setScreenshot5(screenshots.get("screen_4"));
+                            }
+
                             p.setWhatsnew("");
                             p.setIsEditorChoice("1");
                             p.setIsVerified("1");
@@ -138,9 +152,16 @@ public class SWBHubAPI {
                             p.setPublishedTimestamp(String.valueOf(swbComp.timestamp));
                             p.setDemoLink(swbComp.dataUrl);
                             p.setCategory("Component");
-                            p.setScreenshot1(swbComp.logoUrl);
-                            p.setScreenshot2(swbComp.logoUrl);
-                            p.setScreenshot3(swbComp.logoUrl);
+                            
+                            Map<String, String> screenshots = swbComp.screenshotUrls;
+                            if (screenshots != null && !screenshots.isEmpty()) {
+                                p.setScreenshot1(screenshots.get("screen_0"));
+                                p.setScreenshot2(screenshots.get("screen_1"));
+                                p.setScreenshot3(screenshots.get("screen_2"));
+                                p.setScreenshot4(screenshots.get("screen_3"));
+                                p.setScreenshot5(screenshots.get("screen_4"));
+                            }
+
                             p.setIsEditorChoice("0");
                             p.setIsVerified("1");
                             p.setDownloads(String.valueOf(swbComp.downloads));
@@ -187,9 +208,16 @@ public class SWBHubAPI {
                             p.setPublishedTimestamp(String.valueOf(swbBlock.timestamp));
                             p.setDemoLink(swbBlock.dataUrl);
                             p.setCategory("Block");
-                            p.setScreenshot1(swbBlock.profilePicUrl);
-                            p.setScreenshot2(swbBlock.profilePicUrl);
-                            p.setScreenshot3(swbBlock.profilePicUrl);
+                            
+                            Map<String, String> screenshots = swbBlock.screenshotUrls;
+                            if (screenshots != null && !screenshots.isEmpty()) {
+                                p.setScreenshot1(screenshots.get("screen_0"));
+                                p.setScreenshot2(screenshots.get("screen_1"));
+                                p.setScreenshot3(screenshots.get("screen_2"));
+                                p.setScreenshot4(screenshots.get("screen_3"));
+                                p.setScreenshot5(screenshots.get("screen_4"));
+                            }
+
                             p.setIsEditorChoice("0");
                             p.setIsVerified("1");
                             p.setDownloads(String.valueOf(swbBlock.downloads));
@@ -250,20 +278,13 @@ public class SWBHubAPI {
                 p.setPublishedTimestamp(String.valueOf(swbProject.timestamp));
                 p.setDemoLink(swbProject.swbUrl); // Store SWB URL in demoLink for now
                 
-                String logo = swbProject.logoUrl;
                 Map<String, String> screenshots = swbProject.screenshotUrls;
                 if (screenshots != null) {
-                    p.setScreenshot1(screenshots.getOrDefault("screen_0", logo));
-                    p.setScreenshot2(screenshots.getOrDefault("screen_1", logo));
-                    p.setScreenshot3(screenshots.getOrDefault("screen_2", logo));
-                    p.setScreenshot4(screenshots.getOrDefault("screen_3", logo));
-                    p.setScreenshot5(screenshots.getOrDefault("screen_4", logo));
-                } else {
-                    p.setScreenshot1(logo);
-                    p.setScreenshot2(logo);
-                    p.setScreenshot3(logo);
-                    p.setScreenshot4(logo);
-                    p.setScreenshot5(logo);
+                    p.setScreenshot1(screenshots.get("screen_0"));
+                    p.setScreenshot2(screenshots.get("screen_1"));
+                    p.setScreenshot3(screenshots.get("screen_2"));
+                    p.setScreenshot4(screenshots.get("screen_3"));
+                    p.setScreenshot5(screenshots.get("screen_4"));
                 }
 
                 p.setIsEditorChoice("0");
