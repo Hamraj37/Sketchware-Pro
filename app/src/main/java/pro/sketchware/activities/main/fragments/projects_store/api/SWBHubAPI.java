@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import pro.sketchware.utility.Network;
@@ -250,11 +251,20 @@ public class SWBHubAPI {
                 p.setDemoLink(swbProject.swbUrl); // Store SWB URL in demoLink for now
                 
                 String logo = swbProject.logoUrl;
-                p.setScreenshot1(swbProject.screenshot1 != null ? swbProject.screenshot1 : logo);
-                p.setScreenshot2(swbProject.screenshot2 != null ? swbProject.screenshot2 : logo);
-                p.setScreenshot3(swbProject.screenshot3 != null ? swbProject.screenshot3 : logo);
-                p.setScreenshot4(swbProject.screenshot4 != null ? swbProject.screenshot4 : logo);
-                p.setScreenshot5(swbProject.screenshot5 != null ? swbProject.screenshot5 : logo);
+                Map<String, String> screenshots = swbProject.screenshotUrls;
+                if (screenshots != null) {
+                    p.setScreenshot1(screenshots.getOrDefault("screen_0", logo));
+                    p.setScreenshot2(screenshots.getOrDefault("screen_1", logo));
+                    p.setScreenshot3(screenshots.getOrDefault("screen_2", logo));
+                    p.setScreenshot4(screenshots.getOrDefault("screen_3", logo));
+                    p.setScreenshot5(screenshots.getOrDefault("screen_4", logo));
+                } else {
+                    p.setScreenshot1(logo);
+                    p.setScreenshot2(logo);
+                    p.setScreenshot3(logo);
+                    p.setScreenshot4(logo);
+                    p.setScreenshot5(logo);
+                }
 
                 p.setIsEditorChoice("0");
                 p.setIsVerified("1");

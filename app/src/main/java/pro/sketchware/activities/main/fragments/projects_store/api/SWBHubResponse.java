@@ -24,11 +24,8 @@ public class SWBHubResponse {
         public String userName;
         public int downloads;
         public String projectSize;
-        public String screenshot1;
-        public String screenshot2;
-        public String screenshot3;
-        public String screenshot4;
-        public String screenshot5;
+        @SerializedName("screenshotUrls")
+        public Map<String, String> screenshotUrls;
     }
 
     public static class SWBHubComponent {
