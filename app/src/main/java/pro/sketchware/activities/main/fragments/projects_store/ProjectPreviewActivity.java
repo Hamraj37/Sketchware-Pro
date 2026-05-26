@@ -359,10 +359,21 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
     }
 
     private void openProject() {
-        String url = project.getDemoLink();
-        if (url == null || url.isEmpty() || !url.startsWith("http")) {
-            url = "https://web.sketchub.in/p/" + project.getId();
+        String category = project.getCategory();
+        String type = "project";
+        if (category != null) {
+            if (category.equalsIgnoreCase("Block")) {
+                type = "block";
+            } else if (category.equalsIgnoreCase("Component")) {
+                type = "component";
+            }
         }
+
+        String url = String.format("https://swbhub.web.app/%s-details.html?title=%s&ts=%s",
+                type,
+                Uri.encode(project.getTitle()),
+                project.getPublishedTimestamp());
+
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(url));
         startActivity(intent);
