@@ -297,6 +297,11 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
             projectOptionsBSD.dismiss();
         });
 
+        binding.projectUpload.setOnClickListener(v -> {
+            projectOptionsBSD.dismiss();
+            showUploadInductionDialog(projectMap);
+        });
+
         binding.projectDelete.setOnClickListener(v -> {
             projectOptionsBSD.dismiss();
             MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(activity);
@@ -320,6 +325,18 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
         }
 
         projectOptionsBSD.show();
+    }
+
+    private void showUploadInductionDialog(HashMap<String, Object> projectMap) {
+        new MaterialAlertDialogBuilder(activity)
+                .setTitle("Upload to SWB Hub")
+                .setMessage("Sharing your projects with the community is a great way to contribute to Sketchware Pro!\n\nFollow these steps to upload:\n\n1. Back up your project.\n2. Take some screenshots of your project.\n3. Click the upload button below and fill out the form.")
+                .setPositiveButton(pro.sketchware.R.string.common_word_upload, (dialog, which) -> {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://swbhub.web.app/upload.html"));
+                    activity.startActivity(intent);
+                })
+                .setNegativeButton(pro.sketchware.R.string.common_word_cancel, null)
+                .show();
     }
 
     public static class ProjectViewHolder extends RecyclerView.ViewHolder {
