@@ -29,6 +29,18 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHo
         holder.binding.userName.setText(comment.getUserName());
         holder.binding.userComment.setText(comment.getComment());
         pro.sketchware.utility.UI.loadImageFromUrl(holder.binding.userAvatar, comment.getUserProfilePic());
+
+        String timestamp = comment.getTimestamp();
+        if (timestamp != null && !timestamp.isEmpty() && !timestamp.equals("null")) {
+            try {
+                long time = Long.parseLong(timestamp);
+                holder.binding.commentTime.setText(android.text.format.DateUtils.getRelativeTimeSpanString(time));
+            } catch (NumberFormatException e) {
+                holder.binding.commentTime.setText("");
+            }
+        } else {
+            holder.binding.commentTime.setText("");
+        }
     }
 
     @Override
