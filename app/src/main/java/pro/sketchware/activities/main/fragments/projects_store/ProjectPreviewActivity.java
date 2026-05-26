@@ -360,17 +360,17 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
     private void openProject() {
         String category = project.getCategory();
-        String type = "project";
+        String fileName = "details.html";
         if (category != null) {
             if (category.equalsIgnoreCase("Block")) {
-                type = "block";
+                fileName = "block-details.html";
             } else if (category.equalsIgnoreCase("Component")) {
-                type = "component";
+                fileName = "component-details.html";
             }
         }
 
-        String url = String.format("https://swbhub.web.app/%s-details.html?title=%s&ts=%s",
-                type,
+        String url = String.format("https://swbhub.web.app/%s?title=%s&ts=%s",
+                fileName,
                 Uri.encode(project.getTitle()),
                 project.getPublishedTimestamp());
 
