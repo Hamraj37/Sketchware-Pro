@@ -12,10 +12,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.LinearLayout;
 
+import androidx.annotation.NonNull;
 import androidx.core.widget.NestedScrollView;
 
 import com.besome.sketch.lib.base.BaseAppCompatActivity;
@@ -43,6 +46,9 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
     private ProjectModel.Project project;
     private boolean isTitleContainerShown;
     private long downloadId = -1;
+    private String downloadedFilePath;
+    private final Handler progressHandler = new Handler(Looper.getMainLooper());
+    private final Runnable progressRunnable = this::updateDownloadProgress;
 
     private final BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
         @Override
@@ -50,6 +56,10 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             if (downloadId != -1 && downloadId == id) {
                 downloadId = -1; // Reset to prevent double triggering
+                progressHandler.removeCallbacks(progressRunnable);
+                runOnUiThread(() -> {
+                    binding.downloadProgress.setVisibility(View.GONE);
+                });
                 handleDownloadComplete(id);
             }
         }
@@ -70,13 +80,26 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
             registerReceiver(downloadReceiver, filter);
         }
 
+        if (savedInstanceState != null) {
+            downloadId = savedInstanceState.getLong("download_id", -1);
+            downloadedFilePath = savedInstanceState.getString("downloaded_file_path");
+        }
+
         loadProjectData(getIntent().getExtras());
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("download_id", downloadId);
+        outState.putString("downloaded_file_path", downloadedFilePath);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(downloadReceiver);
+        progressHandler.removeCallbacks(progressRunnable);
     }
 
     private void loadProjectData(Bundle bundle) {
@@ -136,7 +159,13 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         }
 
         binding.btnComments.setOnClickListener(v -> openCommentsSheet());
-        binding.btnDownload.setOnClickListener(v -> downloadFile());
+        
+        if (downloadedFilePath != null) {
+            setupRestoreButton(downloadedFilePath);
+        } else {
+            binding.btnDownload.setOnClickListener(v -> downloadFile());
+        }
+
         binding.btnOpenIn.setOnClickListener(v -> openProject());
         binding.btnBack.setOnClickListener(v -> finish());
 
@@ -202,6 +231,14 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
                         .setDuration(TITLE_CONTAINER_FADE_DURATION)
                         .start();
             }
+        });
+    }
+
+    private void setupRestoreButton(String path) {
+        binding.btnDownload.setText("Restore");
+        binding.btnDownload.setOnClickListener(v -> {
+            SketchwareUtil.toast("Restoring project...");
+            new BackupRestoreManager(this).doRestore(path, true);
         });
     }
 
@@ -394,34 +431,90 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
             return;
         }
 
-        String fileName = project.getTitle();
-        String extension = "";
-        if (url.endsWith(".swb")) {
-            extension = ".swb";
-        } else if (url.endsWith(".json")) {
-            extension = ".json";
-        } else if (url.contains(".swb")) {
-            extension = ".swb";
-        } else if (url.contains(".json")) {
+        // Clean URL
+        String downloadUrl = url.trim().replace(" ", "%20");
+
+        // Clean Filename
+        String fileName = project.getTitle().replaceAll("[\\\\/:*?\"<>|]", "_") + "_" + System.currentTimeMillis();
+        String extension = ".swb";
+        if (downloadUrl.toLowerCase().endsWith(".json") || downloadUrl.toLowerCase().contains(".json")) {
             extension = ".json";
         }
+        fileName += extension;
 
-        if (!fileName.endsWith(extension)) {
-            fileName += extension;
+        try {
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadUrl));
+            request.setTitle("Downloading " + project.getTitle());
+            request.setDescription("SWB Hub");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setAllowedOverMetered(true);
+            request.setAllowedOverRoaming(true);
+            
+            // Use app-specific external directory to avoid permission issues on Android 10+
+            request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName);
+
+            DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            if (downloadManager != null) {
+                downloadId = downloadManager.enqueue(request);
+                SketchwareUtil.toast("Download started...");
+
+                binding.downloadProgress.setVisibility(View.VISIBLE);
+                binding.downloadProgress.setIndeterminate(true);
+                progressHandler.post(progressRunnable);
+            } else {
+                SketchwareUtil.toastError("Download Manager not available");
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SWBHub", "downloadFile error", e);
+            SketchwareUtil.toastError("Failed to start download: " + e.getMessage());
         }
+    }
 
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-        request.setTitle("Downloading " + project.getTitle());
-        request.setDescription("SWB Hub");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+    private void updateDownloadProgress() {
+        if (downloadId == -1) return;
 
         DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (downloadManager != null) {
-            downloadId = downloadManager.enqueue(request);
-            SketchwareUtil.toast("Download started...");
-        } else {
-            SketchwareUtil.toastError("Download Manager not available");
+        if (downloadManager == null) return;
+
+        DownloadManager.Query query = new DownloadManager.Query();
+        query.setFilterById(downloadId);
+
+        try (Cursor cursor = downloadManager.query(query)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                int status = cursor.getInt(statusIndex);
+
+                if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                    binding.downloadProgress.setVisibility(View.GONE);
+                    return;
+                }
+
+                if (status == DownloadManager.STATUS_FAILED) {
+                    binding.downloadProgress.setVisibility(View.GONE);
+                    int reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON);
+                    int reason = cursor.getInt(reasonIndex);
+                    android.util.Log.e("SWBHub", "Download failed with reason: " + reason);
+                    return;
+                }
+
+                int bytesDownloadedIndex = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR);
+                int bytesTotalIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES);
+
+                long bytesDownloaded = cursor.getLong(bytesDownloadedIndex);
+                long bytesTotal = cursor.getLong(bytesTotalIndex);
+
+                if (bytesTotal > 0) {
+                    int progress = (int) ((bytesDownloaded * 100L) / bytesTotal);
+                    runOnUiThread(() -> {
+                        binding.downloadProgress.setIndeterminate(false);
+                        binding.downloadProgress.setProgress(progress, true);
+                    });
+                }
+                
+                progressHandler.postDelayed(progressRunnable, 500);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("SWBHub", "Error updating progress", e);
         }
     }
 
@@ -431,47 +524,65 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
         DownloadManager.Query query = new DownloadManager.Query();
         query.setFilterById(id);
+        
         try (Cursor cursor = downloadManager.query(query)) {
             if (cursor != null && cursor.moveToFirst()) {
-                int statusColumn = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
-                if (statusColumn != -1 && DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(statusColumn)) {
-                    // Method 1: Use getUriForDownloadedFile and convert it
-                    Uri downloadUri = downloadManager.getUriForDownloadedFile(id);
-                    String path = null;
-                    if (downloadUri != null) {
-                        path = FileUtil.convertUriToFilePath(this, downloadUri);
-                    }
-
-                    // Method 2: Use local URI column
-                    if (path == null) {
-                        int uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
-                        if (uriIndex != -1) {
-                            String uriString = cursor.getString(uriIndex);
-                            if (uriString != null) {
-                                path = FileUtil.convertUriToFilePath(this, Uri.parse(uriString));
-                            }
-                        }
-                    }
-
-                    // Method 3: Fallback to direct path from URI
-                    if (path == null) {
-                        int uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
-                        if (uriIndex != -1) {
-                            String uriString = cursor.getString(uriIndex);
-                            if (uriString != null) {
-                                path = Uri.parse(uriString).getPath();
-                            }
-                        }
-                    }
-
-                    if (path != null && path.toLowerCase().endsWith(".swb")) {
-                        SketchwareUtil.toast("Download complete, restoring project...");
-                        new BackupRestoreManager(this).doRestore(path, true);
-                    }
+                int statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                int status = cursor.getInt(statusIndex);
+                
+                if (status != DownloadManager.STATUS_SUCCESSFUL) {
+                    int reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON);
+                    int reason = cursor.getInt(reasonIndex);
+                    android.util.Log.e("SWBHub", "Download was not successful. Status: " + status + ", Reason: " + reason);
+                    SketchwareUtil.toastError("Download failed (Error " + reason + ")");
+                    return;
                 }
             }
+        }
+
+        Uri downloadUri = downloadManager.getUriForDownloadedFile(id);
+        if (downloadUri == null) {
+            android.util.Log.e("SWBHub", "handleDownloadComplete: downloadUri is null after success");
+            return;
+        }
+
+        try {
+            // Create a temporary file in cache to store the downloaded content
+            String extension = ".swb";
+            if (project.getCategory() != null && (project.getCategory().equalsIgnoreCase("Block") || project.getCategory().equalsIgnoreCase("Component"))) {
+                extension = ".json";
+            }
+            
+            File tempFile = new File(getExternalCacheDir(), "downloaded_item_" + id + extension);
+            
+            try (java.io.InputStream in = getContentResolver().openInputStream(downloadUri);
+                 java.io.OutputStream out = new java.io.FileOutputStream(tempFile)) {
+                
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((in != null) && (read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }
+
+            if (tempFile.exists() && tempFile.length() > 0) {
+                android.util.Log.d("SWBHub", "handleDownloadComplete: File processed at " + tempFile.getAbsolutePath());
+                downloadedFilePath = tempFile.getAbsolutePath();
+                
+                if (extension.equals(".swb")) {
+                    runOnUiThread(() -> setupRestoreButton(downloadedFilePath));
+                    SketchwareUtil.toast("Download complete. Click Restore to install.");
+                } else {
+                    SketchwareUtil.toast("Download complete: " + tempFile.getName());
+                    // For JSON (blocks/components), the file is now in cache. 
+                    // Since auto-import was disabled, we just leave it there or let the user find it.
+                }
+            } else {
+                android.util.Log.e("SWBHub", "handleDownloadComplete: Processed file is empty or missing");
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("SWBHub", "handleDownloadComplete error", e);
+            SketchwareUtil.toastError("Failed to process download: " + e.getMessage());
         }
     }
 }
