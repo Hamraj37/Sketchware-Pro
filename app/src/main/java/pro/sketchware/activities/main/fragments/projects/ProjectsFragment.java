@@ -48,6 +48,7 @@ import pro.sketchware.R;
 import pro.sketchware.activities.main.activities.MainActivity;
 import pro.sketchware.databinding.MyprojectsBinding;
 import pro.sketchware.databinding.SortProjectDialogBinding;
+import pro.sketchware.utility.SketchwareUtil;
 import pro.sketchware.utility.UI;
 
 public class ProjectsFragment extends DA {
@@ -151,6 +152,19 @@ public class ProjectsFragment extends DA {
         binding.myprojects.setAdapter(projectsAdapter);
         binding.myprojects.setHasFixedSize(true);
 
+        projectsAdapter.setSelectionListener(count -> {
+            if (count > 0) {
+                binding.bulkActionsContainer.setVisibility(View.VISIBLE);
+                binding.tvSelectedCount.setText(count + " selected");
+            } else {
+                binding.bulkActionsContainer.setVisibility(View.GONE);
+            }
+        });
+
+        binding.btnCancelSelection.setOnClickListener(v -> projectsAdapter.cancelSelection());
+        binding.btnBulkPin.setOnClickListener(v -> bulkPin());
+        binding.btnBulkDelete.setOnClickListener(v -> bulkDelete());
+
         binding.myprojects.post(this::refreshProjectsList); // wait for RecyclerView to be ready
         UI.addSystemWindowInsetToPadding(binding.specialActionContainer, true, false, true, false);
         UI.addSystemWindowInsetToPadding(binding.loadingContainer, true, false, true, true);
@@ -222,7 +236,19 @@ public class ProjectsFragment extends DA {
 
         executorService.execute(() -> {
             List<HashMap<String, Object>> loadedProjects = lC.a();
-            loadedProjects.sort(new ProjectComparator(preference.d("sortBy"),preference.a("pinnedProject", "-1")));
+            
+            String pinnedIdsStr = preference.a("pinnedProjects", "");
+            java.util.Set<String> pinnedIds = new java.util.HashSet<>();
+            if (!pinnedIdsStr.isEmpty()) {
+                pinnedIds.addAll(java.util.Arrays.asList(pinnedIdsStr.split(",")));
+            }
+            // Add legacy single pinned project if exists
+            String legacyPinnedId = preference.a("pinnedProject", "-1");
+            if (!legacyPinnedId.equals("-1")) {
+                pinnedIds.add(legacyPinnedId);
+            }
+
+            loadedProjects.sort(new ProjectComparator(preference.a("sortBy", ProjectComparator.DEFAULT), pinnedIds));
 
             DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new ProjectDiffCallback(projectsList, loadedProjects));
 
@@ -234,6 +260,7 @@ public class ProjectsFragment extends DA {
                 }
                 projectsList.clear();
                 projectsList.addAll(loadedProjects);
+                projectsAdapter.updatePinnedIdsCache();
                 diffResult.dispatchUpdatesTo(projectsAdapter);
                 if (projectsSearchView != null)
                     projectsAdapter.filterData(projectsSearchView.getQuery().toString());
@@ -310,6 +337,70 @@ public class ProjectsFragment extends DA {
         });
         dialog.setNegativeButton("Cancel", null);
         dialog.show();
+    }
+
+    private void bulkDelete() {
+        java.util.Set<String> selectedIds = projectsAdapter.getSelectedProjectIds();
+        if (selectedIds.isEmpty()) return;
+
+        new MaterialAlertDialogBuilder(requireActivity())
+                .setIcon(R.drawable.icon_delete)
+                .setTitle("Delete " + selectedIds.size() + " projects?")
+                .setMessage("Are you sure you want to delete the selected projects? This action cannot be undone.")
+                .setPositiveButton(R.string.common_word_delete, (v, which) -> {
+                    com.besome.sketch.lib.ui.LoadingDialog progressDialog = new com.besome.sketch.lib.ui.LoadingDialog(requireActivity());
+                    progressDialog.show();
+                    
+                    new Thread(() -> {
+                        for (String scId : selectedIds) {
+                            lC.a(requireActivity(), scId);
+                        }
+                        requireActivity().runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            projectsAdapter.cancelSelection();
+                            refreshProjectsList();
+                        });
+                    }).start();
+                })
+                .setNegativeButton(R.string.common_word_cancel, null)
+                .show();
+    }
+
+    private void bulkPin() {
+        java.util.Set<String> selectedIds = projectsAdapter.getSelectedProjectIds();
+        if (selectedIds.isEmpty()) return;
+        
+        String pinnedIdsStr = preference.a("pinnedProjects", "");
+        java.util.Set<String> pinnedIds = new java.util.HashSet<>();
+        if (!pinnedIdsStr.isEmpty()) {
+            pinnedIds.addAll(java.util.Arrays.asList(pinnedIdsStr.split(",")));
+        }
+
+        // Check if all selected are already pinned
+        boolean allPinned = true;
+        for (String id : selectedIds) {
+            if (!pinnedIds.contains(id)) {
+                allPinned = false;
+                break;
+            }
+        }
+
+        if (allPinned) {
+            // Unpin all selected
+            pinnedIds.removeAll(selectedIds);
+            SketchwareUtil.toast("Selected projects unpinned");
+        } else {
+            // Pin all selected
+            pinnedIds.addAll(selectedIds);
+            SketchwareUtil.toast("Selected projects pinned");
+        }
+
+        preference.a("pinnedProjects", String.join(",", pinnedIds), true);
+        // Clear legacy pin
+        preference.a("pinnedProject", "-1", true);
+        
+        projectsAdapter.cancelSelection();
+        refreshProjectsList();
     }
 
     private static class ProjectDiffCallback extends DiffUtil.Callback {

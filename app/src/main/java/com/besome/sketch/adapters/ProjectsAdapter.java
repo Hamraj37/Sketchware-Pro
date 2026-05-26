@@ -23,8 +23,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import a.a.a.DB;
 import a.a.a.lC;
@@ -45,13 +47,38 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
     private final DB preference;
     private List<HashMap<String, Object>> shownProjects = new ArrayList<>();
     private List<HashMap<String, Object>> allProjects;
+    private final Set<String> selectedProjectIds = new HashSet<>();
+    private final Set<String> pinnedProjectIds = new HashSet<>();
+    private boolean selectionMode = false;
+    private SelectionListener selectionListener;
+
+    public interface SelectionListener {
+        void onSelectionChanged(int count);
+    }
+
+    public void setSelectionListener(SelectionListener selectionListener) {
+        this.selectionListener = selectionListener;
+    }
 
     public ProjectsAdapter(ProjectsFragment projectsFragment, List<HashMap<String, Object>> allProjects) {
         this.projectsFragment = projectsFragment;
         activity = projectsFragment.requireActivity();
         this.allProjects = allProjects;
         preference = new DB(activity, "project");
+        updatePinnedIdsCache();
+    }
 
+    public void updatePinnedIdsCache() {
+        pinnedProjectIds.clear();
+        String pinnedIdsStr = preference.a("pinnedProjects", "");
+        if (!pinnedIdsStr.isEmpty()) {
+            pinnedProjectIds.addAll(Arrays.asList(pinnedIdsStr.split(",")));
+        }
+        // Legacy pin
+        String legacyPin = preference.a("pinnedProject", "-1");
+        if (!legacyPin.equals("-1")) {
+            pinnedProjectIds.add(legacyPin);
+        }
     }
 
     public void setAllProjects(List<HashMap<String, Object>> projects) {
@@ -59,6 +86,7 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
     }
 
     public void filterData(String query) {
+        updatePinnedIdsCache();
         List<HashMap<String, Object>> newProjects = query.isEmpty() ? allProjects : new ArrayList<>();
         if (!query.isEmpty()) {
             for (HashMap<String, Object> project : allProjects) {
@@ -180,9 +208,22 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
         holder.binding.tvPublished.setText(scId);
         holder.itemView.setTag("custom");
 
+        if (selectionMode) {
+            holder.binding.checkbox.setVisibility(View.VISIBLE);
+            holder.binding.checkbox.setChecked(selectedProjectIds.contains(scId));
+            holder.binding.expand.setVisibility(View.GONE);
+        } else {
+            holder.binding.checkbox.setVisibility(View.GONE);
+            holder.binding.expand.setVisibility(View.VISIBLE);
+        }
+
         holder.binding.getRoot().setOnClickListener(v -> {
-            if (!mB.a()) {
-                projectsFragment.toDesignActivity(scId);
+            if (selectionMode) {
+                toggleSelection(scId);
+            } else {
+                if (!mB.a()) {
+                    projectsFragment.toDesignActivity(scId);
+                }
             }
         });
 
@@ -195,11 +236,59 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
         };
 
         holder.binding.expand.setOnClickListener(showProjectSettingsDialog);
-        holder.binding.imgIcon.setOnClickListener(v -> toProjectSettingOrRequestPermission(projectMap, position));
+        holder.binding.imgIcon.setOnClickListener(v -> {
+            if (selectionMode) {
+                toggleSelection(scId);
+            } else {
+                toProjectSettingOrRequestPermission(projectMap, position);
+            }
+        });
         holder.binding.getRoot().setOnLongClickListener(v -> {
-            showProjectOptionsBottomSheet(projectMap, holder.getAbsoluteAdapterPosition());
+            if (!selectionMode) {
+                selectionMode = true;
+                selectedProjectIds.clear();
+                selectedProjectIds.add(scId);
+                notifyDataSetChanged();
+                if (selectionListener != null) {
+                    selectionListener.onSelectionChanged(selectedProjectIds.size());
+                }
+            } else {
+                toggleSelection(scId);
+            }
             return true;
         });
+    }
+
+    private void toggleSelection(String scId) {
+        if (selectedProjectIds.contains(scId)) {
+            selectedProjectIds.remove(scId);
+        } else {
+            selectedProjectIds.add(scId);
+        }
+        if (selectedProjectIds.isEmpty()) {
+            selectionMode = false;
+        }
+        notifyDataSetChanged();
+        if (selectionListener != null) {
+            selectionListener.onSelectionChanged(selectedProjectIds.size());
+        }
+    }
+
+    public void cancelSelection() {
+        selectionMode = false;
+        selectedProjectIds.clear();
+        notifyDataSetChanged();
+        if (selectionListener != null) {
+            selectionListener.onSelectionChanged(0);
+        }
+    }
+
+    public Set<String> getSelectedProjectIds() {
+        return selectedProjectIds;
+    }
+
+    public boolean isSelectionMode() {
+        return selectionMode;
     }
 
     @NonNull
@@ -252,16 +341,22 @@ public class ProjectsAdapter extends RecyclerView.Adapter<ProjectsAdapter.Projec
     }
 
     private void changePinState(HashMap<String, Object> projectMap) {
-        if (isPinned(projectMap)) {
-            preference.a("pinnedProject", "-1", true);
+        String scId = yB.c(projectMap, "sc_id");
+        updatePinnedIdsCache();
+
+        if (pinnedProjectIds.contains(scId)) {
+            pinnedProjectIds.remove(scId);
         } else {
-            preference.a("pinnedProject", yB.c(projectMap, "sc_id"), true);
+            pinnedProjectIds.add(scId);
         }
+        
+        preference.a("pinnedProjects", String.join(",", pinnedProjectIds), true);
+        preference.a("pinnedProject", "-1", true); // Clear legacy
         projectsFragment.refreshProjectsList();
     }
 
     private boolean isPinned(HashMap<String, Object> projectMap) {
-        return Objects.equals(yB.c(projectMap, "sc_id"), preference.a("pinnedProject", "-1"));
+        return pinnedProjectIds.contains(yB.c(projectMap, "sc_id"));
     }
 
     private void showProjectOptionsBottomSheet(HashMap<String, Object> projectMap, int position) {
