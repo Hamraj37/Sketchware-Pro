@@ -21,6 +21,7 @@ public class StoreListActivity extends BaseAppCompatActivity {
     public static final int TYPE_PROJECTS = 0;
     public static final int TYPE_COMPONENTS = 1;
     public static final int TYPE_BLOCKS = 2;
+    public static final int TYPE_MOST_DOWNLOADED = 3;
 
     private ActivityStoreListBinding binding;
     private final SWBHubAPI swbHubAPI = new SWBHubAPI();
@@ -73,6 +74,16 @@ public class StoreListActivity extends BaseAppCompatActivity {
             case TYPE_BLOCKS -> {
                 setTitle("Recent Blocks");
                 swbHubAPI.getRecentBlocks(model -> {
+                    if (model != null) {
+                        adapter = new StoreProjectsAdapter(model.getProjects(), this);
+                        binding.recyclerView.setAdapter(adapter);
+                    }
+                    binding.swipeRefresh.setRefreshing(false);
+                });
+            }
+            case TYPE_MOST_DOWNLOADED -> {
+                setTitle("Most Downloaded");
+                swbHubAPI.getMostDownloadedProjects(model -> {
                     if (model != null) {
                         adapter = new StoreProjectsAdapter(model.getProjects(), this);
                         binding.recyclerView.setAdapter(adapter);

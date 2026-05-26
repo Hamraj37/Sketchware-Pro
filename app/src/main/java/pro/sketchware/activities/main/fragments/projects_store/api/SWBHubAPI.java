@@ -16,6 +16,97 @@ public class SWBHubAPI {
     private final Network network = new Network();
     private final Gson gson = new Gson();
 
+    public void getRecentEverything(Consumer<ProjectModel> consumer) {
+        network.get(BASE_URL, response -> {
+            if (response != null && !response.isEmpty()) {
+                try {
+                    SWBHubResponse swbResponse = gson.fromJson(response, SWBHubResponse.class);
+                    List<ProjectModel.Project> combined = new ArrayList<>();
+
+                    // Add projects
+                    combined.addAll(convertToProjectList(swbResponse));
+
+                    // Add components
+                    if (swbResponse.components != null) {
+                        swbResponse.components.forEach((id, swbComp) -> {
+                            ProjectModel.Project p = new ProjectModel.Project();
+                            p.setId(id);
+                            p.setTitle(swbComp.componentName);
+                            p.setDescription(swbComp.componentDescription);
+                            p.setIcon("res:ic_mtrl_component");
+                            p.setDownloads(String.valueOf(swbComp.downloads));
+                            p.setUid(swbComp.userId);
+                            p.setUserName(swbComp.userName);
+                            p.setUserProfilePic(swbComp.profilePicUrl);
+                            p.setTimestamp(String.valueOf(swbComp.timestamp));
+                            p.setPublishedTimestamp(String.valueOf(swbComp.timestamp));
+                            p.setDemoLink(swbComp.dataUrl);
+                            p.setCategory("Component");
+                            Map<String, String> screenshots = swbComp.screenshotUrls;
+                            if (screenshots != null) {
+                                p.setScreenshot1(screenshots.get("screen_0"));
+                                p.setScreenshot2(screenshots.get("screen_1"));
+                                p.setScreenshot3(screenshots.get("screen_2"));
+                                p.setScreenshot4(screenshots.get("screen_3"));
+                                p.setScreenshot5(screenshots.get("screen_4"));
+                            }
+                            p.setIsEditorChoice("0");
+                            p.setIsVerified("1");
+                            p.setProjectSize(swbComp.projectSize != null ? swbComp.projectSize : "Unknown");
+                            p.setWhatsnew("");
+                            combined.add(p);
+                        });
+                    }
+
+                    // Add blocks
+                    if (swbResponse.blocks != null) {
+                        swbResponse.blocks.forEach((id, swbBlock) -> {
+                            ProjectModel.Project p = new ProjectModel.Project();
+                            p.setId(id);
+                            p.setTitle(swbBlock.blockName);
+                            p.setDescription(swbBlock.blockDescription);
+                            p.setIcon("res:ic_mtrl_block");
+                            p.setUid(swbBlock.userId);
+                            p.setUserName(swbBlock.userName);
+                            p.setUserProfilePic(swbBlock.profilePicUrl);
+                            p.setTimestamp(String.valueOf(swbBlock.timestamp));
+                            p.setPublishedTimestamp(String.valueOf(swbBlock.timestamp));
+                            p.setDemoLink(swbBlock.dataUrl);
+                            p.setCategory("Block");
+                            Map<String, String> screenshots = swbBlock.screenshotUrls;
+                            if (screenshots != null) {
+                                p.setScreenshot1(screenshots.get("screen_0"));
+                                p.setScreenshot2(screenshots.get("screen_1"));
+                                p.setScreenshot3(screenshots.get("screen_2"));
+                                p.setScreenshot4(screenshots.get("screen_3"));
+                                p.setScreenshot5(screenshots.get("screen_4"));
+                            }
+                            p.setIsEditorChoice("0");
+                            p.setIsVerified("1");
+                            p.setProjectSize(swbBlock.projectSize != null ? swbBlock.projectSize : "Unknown");
+                            p.setWhatsnew("");
+                            combined.add(p);
+                        });
+                    }
+
+                    ProjectModel model = new ProjectModel();
+                    model.setStatus("success");
+                    model.setProjects(combined.stream()
+                            .sorted((p1, p2) -> Long.compare(
+                                    Long.parseLong(p2.getTimestamp() != null ? p2.getTimestamp() : "0"),
+                                    Long.parseLong(p1.getTimestamp() != null ? p1.getTimestamp() : "0")))
+                            .collect(Collectors.toList()));
+                    consumer.accept(model);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse response", e);
+                    consumer.accept(null);
+                }
+            } else {
+                consumer.accept(null);
+            }
+        });
+    }
+
     public void getEditorsChoicerProjects(Consumer<ProjectModel> consumer) {
         network.get(BASE_URL, response -> {
             if (response != null && !response.isEmpty()) {

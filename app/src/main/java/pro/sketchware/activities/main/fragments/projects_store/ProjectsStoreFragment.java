@@ -171,9 +171,10 @@ public class ProjectsStoreFragment extends Fragment {
             }
         };
 
-        swbHubAPI.getEditorsChoicerProjects(projectModel -> {
+        swbHubAPI.getRecentEverything(projectModel -> {
             if (projectModel != null) {
-                editorsChoiceAdapter = new StorePagerProjectsAdapter(projectModel.getProjects(), activity);
+                java.util.List<pro.sketchware.activities.main.fragments.projects_store.api.ProjectModel.Project> featured = projectModel.getProjects().stream().limit(10).collect(java.util.stream.Collectors.toList());
+                editorsChoiceAdapter = new StorePagerProjectsAdapter(featured, activity);
                 binding.editorsChoiceProjectsRecyclerView.setAdapter(editorsChoiceAdapter);
             }
             checkFinished.run();
