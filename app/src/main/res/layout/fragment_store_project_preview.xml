@@ -348,22 +348,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Download"
-            app:layout_constraintEnd_toStartOf="@id/btn_like"
-            app:layout_constraintStart_toEndOf="@id/btn_comments"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/btn_like"
-            style="@style/Widget.Material3Expressive.Button.IconButton.Outlined"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="12dp"
-            android:backgroundTint="?attr/colorSurface"
-            android:visibility="gone"
-            app:icon="@drawable/heart_empty_white_outline_96"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/btn_download"
+            app:layout_constraintStart_toEndOf="@id/btn_comments"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

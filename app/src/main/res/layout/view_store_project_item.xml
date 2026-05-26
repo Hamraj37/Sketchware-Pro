@@ -30,32 +30,9 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:gravity="center"
         android:singleLine="true"
         android:textAppearance="?attr/textAppearanceBodyMediumEmphasized"
         tools:text="Sketchware Pro" />
-
-    <LinearLayout
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="8dp"
-        android:gravity="center">
-
-        <ImageView
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:gravity="center_vertical"
-            android:src="@drawable/heart_empty_white_outline_96"
-            app:tint="?attr/colorOnSurface" />
-
-        <TextView
-            android:id="@+id/likes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:gravity="center_vertical"
-            android:text="1.2K"
-            android:textAppearance="?attr/textAppearanceBodySmallEmphasized" />
-    </LinearLayout>
 </LinearLayout>
