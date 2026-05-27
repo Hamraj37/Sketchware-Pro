@@ -86,6 +86,31 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         }
 
         loadProjectData(getIntent().getExtras());
+        checkIfAlreadyDownloaded();
+    }
+
+    private void checkIfAlreadyDownloaded() {
+        if (project == null) return;
+        
+        String extension = ".swb";
+        if (project.getCategory() != null && (project.getCategory().equalsIgnoreCase("Block") || project.getCategory().equalsIgnoreCase("Component"))) {
+            extension = ".json";
+        }
+        
+        String fileName = getPredictableFileName(extension);
+        File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName);
+        
+        if (file.exists() && file.length() > 0) {
+            downloadedFilePath = file.getAbsolutePath();
+            if (extension.equals(".swb")) {
+                setupRestoreButton(downloadedFilePath);
+            }
+        }
+    }
+
+    private String getPredictableFileName(String extension) {
+        String cleanTitle = project.getTitle().replaceAll("[\\\\/:*?\"<>|]", "_");
+        return String.format("%s_%s_%s%s", cleanTitle, project.getId(), project.getPublishedTimestamp(), extension);
     }
 
     @Override
@@ -235,6 +260,7 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
     }
 
     private void setupRestoreButton(String path) {
+        binding.btnDownload.setEnabled(true);
         binding.btnDownload.setText("Restore");
         binding.btnDownload.setOnClickListener(v -> {
             SketchwareUtil.toast("Restoring project...");
@@ -434,13 +460,11 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
         // Clean URL
         String downloadUrl = url.trim().replace(" ", "%20");
 
-        // Clean Filename
-        String fileName = project.getTitle().replaceAll("[\\\\/:*?\"<>|]", "_") + "_" + System.currentTimeMillis();
         String extension = ".swb";
         if (downloadUrl.toLowerCase().endsWith(".json") || downloadUrl.toLowerCase().contains(".json")) {
             extension = ".json";
         }
-        fileName += extension;
+        String fileName = getPredictableFileName(extension);
 
         try {
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadUrl));
@@ -460,6 +484,7 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
                 binding.downloadProgress.setVisibility(View.VISIBLE);
                 binding.downloadProgress.setIndeterminate(true);
+                binding.btnDownload.setEnabled(false);
                 progressHandler.post(progressRunnable);
             } else {
                 SketchwareUtil.toastError("Download Manager not available");
@@ -491,6 +516,7 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
 
                 if (status == DownloadManager.STATUS_FAILED) {
                     binding.downloadProgress.setVisibility(View.GONE);
+                    runOnUiThread(() -> binding.btnDownload.setEnabled(true));
                     int reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON);
                     int reason = cursor.getInt(reasonIndex);
                     android.util.Log.e("SWBHub", "Download failed with reason: " + reason);
@@ -535,6 +561,7 @@ public class ProjectPreviewActivity extends BaseAppCompatActivity {
                     int reason = cursor.getInt(reasonIndex);
                     android.util.Log.e("SWBHub", "Download was not successful. Status: " + status + ", Reason: " + reason);
                     SketchwareUtil.toastError("Download failed (Error " + reason + ")");
+                    runOnUiThread(() -> binding.btnDownload.setEnabled(true));
                     return;
                 }
             }
