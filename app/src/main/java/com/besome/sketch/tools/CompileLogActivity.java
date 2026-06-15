@@ -1,6 +1,8 @@
 package com.besome.sketch.tools;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
@@ -107,6 +109,16 @@ public class CompileLogActivity extends BaseAppCompatActivity {
         });
 
         binding.formatButton.setOnClickListener(v -> options.show());
+
+        binding.copyButton.setOnClickListener(v -> {
+            String log = binding.tvCompileLog.getText().toString();
+            if (!log.isEmpty()) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Compile Log", log);
+                clipboard.setPrimaryClip(clip);
+                SketchwareUtil.toast("Log copied to clipboard");
+            }
+        });
 
         applyLogViewerPreferences();
 
